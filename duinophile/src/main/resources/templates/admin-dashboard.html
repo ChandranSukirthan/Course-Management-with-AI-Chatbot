@@ -1,0 +1,114 @@
+<div th:fragment="main">
+
+    <!-- Flash messages -->
+    <div th:if="${success}" class="alert alert-success">✅ <span th:text="${success}">Success</span></div>
+    <div th:if="${error}" class="alert alert-error">⚠️ <span th:text="${error}">Error</span></div>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div>
+            <h1 style="margin-bottom:0.2rem;">Admin Dashboard</h1>
+            <p style="color:var(--text-muted); font-size:0.88rem; margin:0;">Manage all users — Admins, Staff &amp; Students</p>
+        </div>
+        <a th:href="@{/admin/add-user}" class="btn btn-green">+ Add User</a>
+    </div>
+
+    <!-- Stats Row -->
+    <div style="display:flex; gap:1rem; margin-bottom:2rem; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:0.6rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.7rem 1.2rem; box-shadow:var(--shadow-sm);">
+            <span style="font-size:1.3rem;">👑</span>
+            <span style="font-weight:800; color:var(--navy);" th:text="${#lists.size(admins)}">0</span>
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Admins</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.7rem 1.2rem; box-shadow:var(--shadow-sm);">
+            <span style="font-size:1.3rem;">🛠️</span>
+            <span style="font-weight:800; color:var(--blue);" th:text="${#lists.size(staff)}">0</span>
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Staff</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.6rem; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.7rem 1.2rem; box-shadow:var(--shadow-sm);">
+            <span style="font-size:1.3rem;">🎓</span>
+            <span style="font-weight:800; color:var(--green);" th:text="${#lists.size(students)}">0</span>
+            <span style="font-size:0.8rem; color:var(--text-muted); font-weight:600;">Students</span>
+        </div>
+    </div>
+
+    <!-- Unified Users Table -->
+    <div class="card" style="padding:0; overflow:hidden;">
+        <table>
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Admins -->
+                <tr th:each="u : ${admins}">
+                    <td>
+                        <div style="font-weight:700; color:var(--navy);" th:text="${u.username}">Username</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);" th:text="${u.fullName}">Full Name</div>
+                    </td>
+                    <td style="font-size:0.88rem; color:var(--text-muted);" th:text="${u.email}">email</td>
+                    <td>
+                        <span class="badge" style="background:var(--navy);">👑 Admin</span>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:0.4rem;">
+                            <a th:href="@{/admin/edit-user/{id}(id=${u.id})}" class="btn btn-sm btn-outline">Edit</a>
+                            <form th:action="@{/admin/delete-user/{id}(id=${u.id})}" method="post"
+                                  onsubmit="confirmDelete(event, 'Delete this account?')">
+                                <button type="submit" class="btn btn-sm btn-red">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Staff -->
+                <tr th:each="u : ${staff}">
+                    <td>
+                        <div style="font-weight:700; color:var(--blue);" th:text="${u.username}">Username</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);" th:text="${u.fullName}">Full Name</div>
+                    </td>
+                    <td style="font-size:0.88rem; color:var(--text-muted);" th:text="${u.email}">email</td>
+                    <td>
+                        <span class="badge">🛠️ Staff</span>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:0.4rem;">
+                            <a th:href="@{/admin/edit-user/{id}(id=${u.id})}" class="btn btn-sm btn-outline">Edit</a>
+                            <form th:action="@{/admin/delete-user/{id}(id=${u.id})}" method="post"
+                                  onsubmit="confirmDelete(event, 'Delete this account?')">
+                                <button type="submit" class="btn btn-sm btn-red">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Students -->
+                <tr th:each="u : ${students}">
+                    <td>
+                        <div style="font-weight:700; color:var(--green);" th:text="${u.username}">Username</div>
+                        <div style="font-size:0.8rem; color:var(--text-muted);" th:text="${u.fullName}">Full Name</div>
+                    </td>
+                    <td style="font-size:0.88rem; color:var(--text-muted);" th:text="${u.email}">email</td>
+                    <td>
+                        <span class="badge badge-green">🎓 Student</span>
+                    </td>
+                    <td>
+                        <div style="display:flex; gap:0.4rem;">
+                            <a th:href="@{/admin/edit-user/{id}(id=${u.id})}" class="btn btn-sm btn-outline">Edit</a>
+                            <form th:action="@{/admin/delete-user/{id}(id=${u.id})}" method="post"
+                                  onsubmit="confirmDelete(event, 'Delete this account?')">
+                                <button type="submit" class="btn btn-sm btn-red">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                <!-- Empty state -->
+                <tr th:if="${#lists.isEmpty(admins) and #lists.isEmpty(staff) and #lists.isEmpty(students)}">
+                    <td colspan="4" style="text-align:center; color:var(--text-muted); padding:2.5rem;">No users found.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

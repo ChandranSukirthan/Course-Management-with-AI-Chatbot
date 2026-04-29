@@ -1,0 +1,180 @@
+<div th:fragment="main">
+    <!-- Back / Next navigation -->
+    <div class="lesson-nav">
+        <a th:href="@{/courses/view/{id}(id=${lesson.courseId})}">← Back to Course</a>
+        <span></span>
+    </div>
+
+    <!-- Topic & Content Panel -->
+    <div class="panel" style="margin-bottom:1.5rem; position:relative;">
+        <div th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}" 
+             style="position:absolute; top:1.2rem; right:1.2rem; display:flex; gap:0.6rem;">
+            <a th:href="@{/lessons/edit/{id}(id=${lesson.id})}" class="btn btn-sm btn-outline" style="border-color:#ddd;">✏️ Edit Lesson</a>
+            <form th:action="@{/lessons/delete/{id}(id=${lesson.id})}" method="post" onsubmit="confirmDelete(event, 'Delete this lesson?')">
+                <button type="submit" class="btn btn-sm btn-red" style="padding:0.35rem 0.6rem;">Delete</button>
+            </form>
+        </div>
+
+        <h2 th:text="${lesson.title}" style="color:var(--blue); margin-bottom:1rem; padding-right: 15rem;">This is the topic</h2>
+        <div th:utext="${lesson.content}" style="line-height:1.7; font-size:0.97rem; margin-bottom:2rem;">Lesson Content</div>
+
+        <!-- Completion Button for Students -->
+        <div th:if="${currentUser != null and currentUser.role == 'USER' and isEnrolled}" 
+             style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border);">
+            
+            <div th:if="${completedLessonIds != null and completedLessonIds.contains(lesson.id)}" 
+                 style="display:flex; align-items:center; gap:0.6rem; color:var(--green); font-weight:700; background:#e8f5e9; padding:0.8rem 1.2rem; border-radius:10px; width:fit-content;">
+                <span>✅</span> Lesson Completed
+            </div>
+
+            <form th:if="${completedLessonIds == null or !completedLessonIds.contains(lesson.id)}" 
+                  th:action="@{/lessons/complete/{id}(id=${lesson.id})}" method="post">
+                <button type="submit" class="btn btn-green" style="padding:0.8rem 2rem; font-size:1rem; border-radius:12px; box-shadow:0 4px 12px rgba(40,167,69,0.2);">
+                    Mark as Completed ✨
+                </button>
+            </form>
+        </div>
+
+        <!-- Lesson Materials Section -->
+        <div th:if="${lesson.materialUrl}" style="margin-top:2rem; padding:1.2rem; background:var(--blue-light, #eef4ff); border-radius:12px; border:1px solid var(--blue-mid, #c7d9ff); display:flex; align-items:center; gap:1.2rem;">
+            <div style="background:white; width:50px; height:50px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 4px 10px rgba(0,0,0,0.05);">📑</div>
+            <div style="flex:1;">
+                <h4 style="color:var(--navy); margin-bottom:0.2rem;">Lesson Materials</h4>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0;" th:text="${lesson.materialName}">Download the official study guide (PDF)</p>
+            </div>
+            <a th:href="${lesson.materialUrl}" download class="btn btn-sm" style="background:var(--blue); color:white; padding:0.6rem 1.2rem; border-radius:8px;">⬇️ Download PDF</a>
+            <form th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}"
+                  th:action="@{/lessons/delete-material/{id}(id=${lesson.id})}" method="post"
+                  onsubmit="confirmDelete(event, 'Remove the PDF material from this lesson?')">
+                <button type="submit" class="btn btn-sm btn-red" style="padding:0.6rem 1rem; border-radius:8px;">🗑️ Delete PDF</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Quiz Section -->
+    <div th:if="${not #lists.isEmpty(lesson.quiz)}" style="margin-top:2rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <h3 style="color:var(--navy); margin:0;">Quiz Time!</h3>
+            <form th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}" 
+                  th:action="@{/lessons/delete-quiz/{id}(id=${lesson.id})}" method="post" onsubmit="confirmDelete(event, 'Delete only the quiz from this lesson?')">
+                <button type="submit" class="btn btn-sm btn-red">Remove Quiz</button>
+            </form>
+        </div>
+
+        <div th:each="q, i : ${lesson.quiz}" style="margin-bottom:2rem;" class="quiz-question-container">
+            <!-- Question Card -->
+            <div class="panel" style="background:white; border:1.5px solid var(--blue-mid); display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                    <h3 th:text="'Q' + ${i.count} + '. ' + ${q.question}" style="color:var(--navy); margin-bottom:0; flex:1; padding-right:1rem;">Question</h3>
+                    <span class="badge" style="background:#e3f2fd; color:#1565c0; font-weight:700;" th:text="${q.points} + ' Pts'">10 Pts</span>
+                </div>
+                <!-- Optional Context / Content -->
+                <div th:if="${q.content != null and !q.content.isEmpty()}" 
+                     th:text="${q.content}" 
+                     style="margin-top:0.85rem; padding-top:0.85rem; border-top:1px dashed var(--blue-mid); font-size:0.9rem; color:var(--text-sub); width:100%; line-height:1.5;">
+                   Context
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div style="margin-top:0.75rem;">
+                <button th:each="opt, optIdx : ${q.options}"
+                        class="quiz-option"
+                        th:text="${opt}"
+                        type="button"
+                        th:onclick="'checkAnswer(this, ' + ${optIdx.index} + ', ' + ${q.correctOptionIndex} + ', ' + ${q.points} + ')'">
+                    Option
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Points Screen -->
+        <div id="points-screen" class="points-screen" style="display:none; text-align:center; padding:3rem; border-radius:20px; background:white; border:2px dashed #28a745; margin-top:2rem;">
+            <div style="font-size:4rem; margin-bottom:0.5rem;" id="points-emoji">🎉</div>
+            <div style="font-size:3.5rem; font-weight:900; color:#28a745; line-height:1;" id="final-points-val">+0</div>
+            <div style="font-size:1.1rem; color:var(--text-muted); font-weight:700; margin-bottom:1.5rem;">Points Earned</div>
+            <form id="claim-form" th:action="@{/lessons/submit-quiz/{id}(id=${lesson.id})}" method="post">
+                <input type="hidden" name="earnedPoints" id="earnedPointsInput" value="0"/>
+                <button type="submit" class="btn btn-green btn-lg">Claim Points & Back to Roadmap</button>
+            </form>
+            <button id="retry-btn" type="button" class="btn btn-primary btn-lg" style="display:none; margin: 0 auto; background: var(--blue);" onclick="retryQuiz()">↺ Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        let answeredCount = 0;
+        let totalEarned = 0;
+        const totalQuestions = document.querySelectorAll('.quiz-question-container').length;
+
+        function checkAnswer(btn, selectedIdx, correctIdx, points) {
+            const group = btn.parentElement;
+            const allOpts = group.querySelectorAll('.quiz-option');
+            allOpts.forEach(opt => { opt.disabled = true; opt.style.cursor = 'default'; });
+
+            if (selectedIdx === correctIdx) {
+                btn.classList.add('correct');
+                btn.style.background = '#2e7d32';
+                btn.style.color = 'white';
+                totalEarned += parseInt(points);
+            } else {
+                btn.classList.add('wrong');
+                btn.style.background = '#d32f2f';
+                btn.style.color = 'white';
+                allOpts[correctIdx]?.classList.add('correct');
+                if (allOpts[correctIdx]) {
+                    allOpts[correctIdx].style.background = '#2e7d32';
+                    allOpts[correctIdx].style.color = 'white';
+                }
+            }
+
+            answeredCount++;
+            if (answeredCount >= totalQuestions) {
+                setTimeout(() => {
+                    document.getElementById('final-points-val').innerText = '+' + totalEarned;
+                    document.getElementById('earnedPointsInput').value = totalEarned;
+                    
+                    if(totalEarned === 0) {
+                        document.getElementById('points-emoji').innerText = '💡';
+                        document.getElementById('final-points-val').style.color = '#5c5c5c';
+                        document.getElementById('points-screen').style.borderColor = '#dc3545';
+                        document.getElementById('claim-form').style.display = 'none';
+                        document.getElementById('retry-btn').style.display = 'inline-block';
+                    } else {
+                        document.getElementById('points-emoji').innerText = '🎉';
+                        document.getElementById('final-points-val').style.color = '#28a745';
+                        document.getElementById('points-screen').style.borderColor = '#28a745';
+                        document.getElementById('claim-form').style.display = 'block';
+                        document.getElementById('retry-btn').style.display = 'none';
+                    }
+                    
+                    document.getElementById('points-screen').style.display = 'block';
+                    document.getElementById('points-screen').scrollIntoView({ behavior: 'smooth' });
+                }, 800);
+            }
+        }
+
+        function retryQuiz() {
+            // Reset counters
+            answeredCount = 0;
+            totalEarned = 0;
+            
+            // Hide points screen
+            document.getElementById('points-screen').style.display = 'none';
+            
+            // Reset all option buttons
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.disabled = false;
+                opt.style.cursor = 'pointer';
+                opt.classList.remove('correct', 'wrong');
+                opt.style.background = '';
+                opt.style.color = '';
+            });
+            
+            // Scroll back to the first question
+            const firstQuestion = document.querySelector('.quiz-question-container');
+            if(firstQuestion) {
+                firstQuestion.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+</div>

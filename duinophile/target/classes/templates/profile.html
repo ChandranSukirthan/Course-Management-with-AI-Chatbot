@@ -1,0 +1,189 @@
+<div th:fragment="main">
+    <div style="max-width: 680px; margin: 2rem auto;">
+
+        <!-- Profile Card -->
+        <div class="form-card">
+            <div>
+                <h2 style="color:var(--navy); margin-bottom:0.25rem;">Welcome back <span th:text="${user.fullName != null ? user.fullName : user.username}">Scholar</span>!</h2>
+                <p th:if="${user.role != 'ADMIN' and user.role != 'STAFF'}" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:0;">Total points earned:</p>
+            </div>
+
+            <div th:if="${user.role != 'ADMIN' and user.role != 'STAFF'}" style="text-align:center; margin:1.5rem 0;">
+                <span style="font-size:4rem; font-weight:900; color:var(--navy); display:block; animation: popIn 0.6s ease forwards;" th:text="${user.points != null ? user.points : 0}">0</span>
+                <span style="font-size:1rem; color:var(--text-muted); font-weight:600;">points</span>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" th:value="${user.fullName}" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" th:value="${user.username}" readonly>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" th:value="${user.email}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" value="••••••••" readonly>
+            </div>
+
+            <div style="display:flex; gap:1rem; margin-top:1.5rem; flex-wrap:wrap;">
+                <a th:href="@{/posts/create}" style="background:#fff; color:#334155; border:1px solid #e2e8f0; border-radius:12px; font-weight:800; display:flex; align-items:center; gap:0.5rem; padding: 0.85rem 1.6rem; text-decoration:none; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size:1.1rem;">✨</span> Share Achievement
+                </a>
+                <a th:href="@{/users/edit/{id}(id=${user.id})}" style="background:#fff; color:#334155; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; display:flex; align-items:center; gap:0.5rem; padding: 0.85rem 1.5rem; text-decoration:none; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size:1.1rem;">✏️</span> Edit Profile
+                </a>
+                <a th:href="@{/posts/feed}" style="background:#fff; color:#334155; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; display:flex; align-items:center; gap:0.5rem; padding: 0.85rem 1.5rem; text-decoration:none; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size:1.1rem;">🏠</span> Home Feed
+                </a>
+                <a th:href="@{/reports/my-reports}" style="background:#fff; color:#334155; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; display:flex; align-items:center; gap:0.5rem; padding: 0.85rem 1.5rem; text-decoration:none; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <span style="font-size:1.1rem;">🚩</span> My Reports
+                </a>
+            </div>
+        </div>
+
+        <!-- My Posts Section -->
+        <div style="margin-top: 2rem;">
+            <h3 style="color:var(--navy); margin-bottom:1rem; font-size:1.2rem; display:flex; align-items:center; gap:0.5rem;">
+                📝 My Posts
+                <span th:if="${userPosts != null}"
+                      style="background:var(--blue-light,#e3f0ff); color:var(--blue,#1565c0); border-radius:999px; font-size:0.8rem; font-weight:700; padding:0.15rem 0.6rem;"
+                      th:text="${#lists.size(userPosts)}">0</span>
+            </h3>
+
+            <!-- Empty State -->
+            <div th:if="${userPosts == null or #lists.isEmpty(userPosts)}"
+                 style="text-align:center; padding:2.5rem; color:var(--text-muted); background:var(--card-bg,#fff); border-radius:var(--radius-md,10px); border:1.5px dashed var(--border);">
+                <span style="font-size:2.5rem;">🌱</span>
+                <p style="margin-top:0.75rem; font-size:1rem;">You haven't posted anything yet.</p>
+                <a th:href="@{/posts/create}" class="btn" style="margin-top:0.5rem;">Share your first achievement!</a>
+            </div>
+
+            <!-- Posts List -->
+            <div th:if="${userPosts != null and !#lists.isEmpty(userPosts)}" style="display:flex; flex-direction:column; gap:1rem;">
+                <div th:each="post : ${userPosts}" class="post-row"
+                     style="background:var(--card-bg,#fff); border:1px solid var(--border); border-radius:var(--radius-md,10px); padding:1.1rem;">
+
+                    <!-- Post Header -->
+                    <div style="margin-bottom: 0.75rem;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 0.4rem;">
+                            <span style="font-weight:700; color:var(--navy); font-size:0.95rem;"
+                                  th:text="${'@' + (post.authorName != null ? post.authorName : 'Scholar')}">@user</span>
+                            <span style="font-size:0.78rem; color:var(--text-muted);"
+                                  th:text="${post.createdAt != null ? #temporals.format(post.createdAt, 'MMM d, yyyy') : ''}">Date</span>
+                        </div>
+                        
+                        <!-- Title -->
+                        <h4 th:text="${post.title}" style="margin: 0 0 0.5rem 0; color: #111827; font-weight: 800; font-size: 1.2rem; line-height: 1.3;">Achievement Title</h4>
+                        
+                        <!-- Badges -->
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
+                            <span th:if="${post.achievementType != null and !post.achievementType.isEmpty()}" 
+                                  style="background: #f1f5f9; color: #475569; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; border: 1px solid #e2e8f0; text-transform: uppercase;"
+                                  th:text="${post.achievementType}">Type</span>
+                            <span th:if="${post.level != null}" 
+                                  style="background: #ecfdf5; color: #059669; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; border: 1px solid #10b98140;"
+                                  th:text="'LVL ' + ${post.level}">LVL</span>
+                            <span th:if="${post.status == 'PENDING'}" style="background:#fff3e0; color:#e65100; font-size:0.72rem; font-weight:700; padding:0.2rem 0.6rem; border-radius:6px; border:1px solid #ffcc80;">⏳ Pending</span>
+                            <span th:if="${!post.publiclyVisible}" style="background: #fffbeb; color: #d97706; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; border: 1px solid #fbbf2440;">🔒 PRIVATE</span>
+                        </div>
+                    </div>
+
+                    <!-- Content -->
+                    <p style="margin:0 0 0.85rem 0; color:#374151; line-height:1.6; font-size: 1rem;"
+                       th:text="${post.content}">Post content</p>
+
+                    <!-- Image -->
+                    <div th:if="${post.imageUrl != null}" style="margin-bottom:0.7rem;">
+                        <img th:src="${post.imageUrl}" alt="Post Image"
+                             style="max-width:100%; max-height:260px; border-radius:8px; border:1px solid var(--border); object-fit:cover;" />
+                    </div>
+
+                    <!-- Reactions summary -->
+                    <div style="display:flex; gap:1rem; margin-bottom:0.75rem; font-size:0.85rem; color:var(--text-muted);">
+                        <span>👍 <strong th:text="${post.reactions != null and post.reactions.get('like') != null ? post.reactions.get('like').size() : 0}">0</strong></span>
+                        <span>❤️ <strong th:text="${post.reactions != null and post.reactions.get('love') != null ? post.reactions.get('love').size() : 0}">0</strong></span>
+                        <span>💡 <strong th:text="${post.reactions != null and post.reactions.get('insight') != null ? post.reactions.get('insight').size() : 0}">0</strong></span>
+                        <span th:if="${post.comments != null}">💬 <strong th:text="${#lists.size(post.comments)}">0</strong> comments</span>
+                    </div>
+
+                    <!-- Comments (collapsed) -->
+                    <div th:if="${post.comments != null and !#lists.isEmpty(post.comments)}" style="border-top:1px solid var(--border); padding-top:0.7rem; margin-bottom:0.75rem;">
+                        <button type="button"
+                                th:data-postid="${post.id}"
+                                onclick="toggleProfileComments(this.getAttribute('data-postid'))"
+                                style="background:transparent; border:none; color:var(--blue,#1565c0); font-size:0.82rem; font-weight:600; cursor:pointer; padding:0; margin-bottom:0.5rem;">
+                            Show comments (<span th:text="${#lists.size(post.comments)}">0</span>)
+                        </button>
+                        <div th:id="'pc-' + ${post.id}" style="display:none; flex-direction:column; gap:0.5rem;">
+                            <div th:each="comment : ${post.comments}"
+                                 style="padding:0.45rem 0.7rem; border-left:3px solid var(--border); background:rgba(0,0,0,0.02); border-radius:0 6px 6px 0; font-size:0.85rem;">
+                                <span style="font-weight:700; color:var(--navy);"
+                                      th:text="${'@' + (comment.authorName != null ? comment.authorName : 'Scholar')}">@user</span>
+                                <span style="color:var(--text); margin-left:0.4rem;" th:text="${comment.content}">Comment text</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+                        <a th:href="@{/posts/view/{id}(id=${post.id})}" class="btn btn-sm btn-secondary" style="border-radius:999px;">View</a>
+                        <button type="button" th:data-postid="${post.id}" th:data-title="${post.title}" 
+                                onclick="sharePost(this.getAttribute('data-postid'), this.getAttribute('data-title'))"
+                                style="background:#fff; border:1px solid #e2e8f0; padding:0.4rem 0.9rem; color:#64748b; border-radius:999px; display:inline-flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                            Share
+                        </button>
+                        <a th:href="@{/posts/edit/{id}(id=${post.id})}" class="btn btn-sm btn-secondary">✏️ Edit</a>
+                        <form th:action="@{/posts/delete/{id}(id=${post.id})}" method="post" style="margin:0;"
+                              onsubmit="confirmDelete(event, 'Delete this post?')">
+                            <button type="submit" class="btn btn-sm btn-red">🗑 Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleProfileComments(postId) {
+            const el = document.getElementById('pc-' + postId);
+            if (el) {
+                el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+            }
+        }
+        async function sharePost(postId, title) {
+            const url = window.location.origin + '/posts/view/' + postId;
+            const shareData = {
+                title: title || 'My Achievement on Duinophile',
+                text: 'Sharing my progress on Duinophile!',
+                url: url
+            };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    await navigator.clipboard.writeText(url);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Link Copied!',
+                        text: 'Link copied to clipboard.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        }
+    </script>
+</div>

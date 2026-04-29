@@ -1,0 +1,170 @@
+<div th:fragment="main">
+    <h1>Discussion Thread</h1>
+
+    <!-- Flash Messages -->
+    <div th:if="${error}" style="background-color: #fee; border: 1.5px solid #fcc; color: var(--red); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem;">
+        <span th:text="${error}">Error message</span>
+    </div>
+    <div th:if="${success}" style="background-color: #eefbee; border: 1.5px solid #cceccc; color: var(--green); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem;">
+        <span th:text="${success}">Success message</span>
+    </div>
+
+    <!-- Original Post -->
+    <div class="post-row" style="margin-bottom:1.5rem;">
+        <div class="post-author">
+            <span th:text="'@' + ${post.authorName != null ? post.authorName : 'Scholar'}">@username</span>
+            <span th:if="${post.status == 'PENDING'}" style="color:orange; font-size: 0.8em; margin-left: 0.5rem;">[PENDING]</span>
+        </div>
+        <h2 th:text="${post.title}" style="margin: 0.5rem 0 0.25rem 0; color: #111827; font-weight: 800; font-size: 1.5rem;">Achievement Title</h2>
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap;">
+            <span th:if="${post.achievementType != null and !post.achievementType.isEmpty()}" th:text="${post.achievementType}" style="font-size: 0.72rem; font-weight: 700; background: #f3f4f6; color: #4b5563; padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid #e5e7eb;">TYPE</span>
+            <span th:if="${post.level != null}" th:text="'LVL ' + ${post.level}" style="font-size: 0.72rem; font-weight: 700; background: #ecfdf5; color: #059669; padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid #10b98140;">LVL</span>
+            <span th:if="${!post.publiclyVisible}" style="font-size: 0.72rem; font-weight: 700; background: #fffbeb; color: #d97706; padding: 0.15rem 0.5rem; border-radius: 4px; border: 1px solid #fbbf2440;">🔒 PRIVATE</span>
+        </div>
+        <p class="post-content" th:text="${post.content}" style="margin-bottom:1rem; font-size: 1.1rem; line-height: 1.6; color: #374151;">Post content.</p>
+        <div th:if="${post.imageUrl != null}" style="margin-bottom: 1rem;">
+            <img th:src="${post.imageUrl}" alt="Post Image" style="max-width: 100%; max-height: 600px; border-radius: 12px; border: 1px solid #e5e7eb;" />
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid #e5e7eb; padding-top: 1rem;">
+            <a th:href="@{/posts/feed}" class="btn btn-sm btn-secondary">← Back to feed</a>
+            <!-- Reactions Bar -->
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <!-- Share Button -->
+                <button type="button" th:data-postid="${post.id}" th:data-title="${post.title}" 
+                        onclick="sharePostDetail(this.getAttribute('data-postid'), this.getAttribute('data-title'))"
+                        style="background:#fff; border:1px solid #e2e8f0; padding:0.4rem 0.9rem; color:#64748b; border-radius:999px; display:inline-flex; align-items:center; gap:0.4rem; font-size:0.85rem; font-weight:600; cursor:pointer;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                    Share
+                </button>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <form th:action="@{/posts/react/{id}(id=${post.id})}" method="post" style="margin:0;">
+                        <input type="hidden" name="type" value="like"/>
+                        <button type="submit" class="btn btn-sm"
+                                th:style="${post.reactions != null and post.reactions.get('like') != null and currentUser != null and post.reactions.get('like').contains(currentUser.id)} ? 'background:var(--blue-light); border-color:var(--blue); padding:0.4rem 0.6rem;' : 'background:transparent; border:1px solid var(--border); padding:0.4rem 0.6rem; color:var(--text-muted);'">
+                            👍 <span th:text="${post.reactions != null && post.reactions.get('like') != null ? post.reactions.get('like').size() : 0}">0</span>
+                        </button>
+                    </form>
+                    <form th:action="@{/posts/react/{id}(id=${post.id})}" method="post" style="margin:0;">
+                        <input type="hidden" name="type" value="love"/>
+                        <button type="submit" class="btn btn-sm"
+                                th:style="${post.reactions != null and post.reactions.get('love') != null and currentUser != null and post.reactions.get('love').contains(currentUser.id)} ? 'background:#ffebee; border-color:#f44336; padding:0.4rem 0.6rem;' : 'background:transparent; border:1px solid var(--border); padding:0.4rem 0.6rem; color:var(--text-muted);'">
+                            ❤️ <span th:text="${post.reactions != null && post.reactions.get('love') != null ? post.reactions.get('love').size() : 0}">0</span>
+                        </button>
+                    </form>
+                    <form th:action="@{/posts/react/{id}(id=${post.id})}" method="post" style="margin:0;">
+                        <input type="hidden" name="type" value="insight"/>
+                        <button type="submit" class="btn btn-sm"
+                                th:style="${post.reactions != null and post.reactions.get('insight') != null and currentUser != null and post.reactions.get('insight').contains(currentUser.id)} ? 'background:#fff9c4; border-color:#fbc02d; padding:0.4rem 0.6rem;' : 'background:transparent; border:1px solid var(--border); padding:0.4rem 0.6rem; color:var(--text-muted);'">
+                            💡 <span th:text="${post.reactions != null && post.reactions.get('insight') != null ? post.reactions.get('insight').size() : 0}">0</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Comment Input -->
+    <div style="display:flex; gap:0.75rem; margin-bottom:1.5rem; align-items:flex-start;">
+        <form th:action="@{/comments/create}" method="post" style="display:flex; gap:0.75rem; flex:1;">
+            <input type="hidden" name="postId" th:value="${post.id}">
+            <input type="text" id="detail-comment-input" name="content" placeholder="Write a comment..." required style="flex:1;">
+            <button type="submit" class="btn" style="white-space:nowrap;">Add Comment</button>
+        </form>
+    </div>
+
+    <!-- Comments -->
+    <div th:if="${comments == null or #lists.isEmpty(comments)}" style="color:var(--text-muted); font-size:0.9rem; margin-bottom:1rem;">No comments yet.</div>
+
+    <div style="display:flex; flex-direction:column; gap:0.6rem;" th:if="${comments != null and !#lists.isEmpty(comments)}">
+        <div th:each="comment, cs : ${comments}" class="post-row" th:style="${comment.content != null and #strings.startsWith(comment.content, '@')} ? 'margin-left: 6rem; padding-left: 1.5rem; border-left: 4px solid var(--blue); animation-delay:' + ${cs.index * 0.04} + 's' : 'margin-left: 3rem; padding-left: 1.5rem; border-left: 3px solid var(--border); animation-delay:' + ${cs.index * 0.04} + 's'">
+            <div class="post-author" th:text="'@' + ${comment.authorName != null ? comment.authorName : 'Scholar'}">@username</div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="post-content" th:text="${comment.content}">Reply text</span>
+                <div style="display:flex; gap:0.4rem; align-items:center;">
+                    <button type="button" class="btn btn-sm btn-secondary" th:data-author="${comment.authorName != null ? comment.authorName : 'Scholar'}" onclick="replyToCommentDetail(this.getAttribute('data-author'))" style="font-size: 0.8em; padding: 0.2rem 0.5rem; background: transparent; color: var(--blue); border: 1px solid var(--blue); cursor: pointer;">Reply</button>
+                    <button type="button" class="btn btn-sm" th:data-commentid="${comment.id}" onclick="reportCommentDetail(this.getAttribute('data-commentid'))" style="font-size: 0.8em; padding: 0.2rem 0.5rem; background: transparent; color: #ed8936; border: 1px solid #ed8936; cursor: pointer;">Report</button>
+                    <a th:if="${currentUser != null and currentUser.id == comment.authorId}" th:href="@{/comments/edit/{id}(id=${comment.id})}" class="btn btn-sm" style="font-size: 0.8em; padding: 0.2rem 0.5rem; background: transparent; color: var(--text-muted); border: 1px solid var(--border); text-decoration: none;">Edit</a>
+                    <form th:if="${currentUser != null and (currentUser.id == comment.authorId or currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}" th:action="@{/comments/delete/{id}(id=${comment.id})}" method="post" onsubmit="confirmDelete(event, 'Delete comment?')">
+                        <button type="submit" class="btn btn-sm btn-red" style="font-size: 0.8em; padding: 0.2rem 0.5rem; background: transparent; color: var(--red); border: 1px solid var(--red);">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function replyToCommentDetail(username) {
+            const input = document.getElementById('detail-comment-input');
+            if (input) {
+                input.value = '@' + username + ' ';
+                input.focus();
+            }
+        }
+
+        function reportCommentDetail(commentId) {
+            Swal.fire({
+                title: 'Report Comment',
+                input: 'textarea',
+                inputLabel: 'Reason for reporting',
+                inputPlaceholder: 'Why is this inappropriate?',
+                showCancelButton: true,
+                confirmButtonText: 'Submit for review',
+                confirmButtonColor: '#ed8936',
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'You need to write a reason!'
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = '/reports/create';
+                    
+                    const commentIdInput = document.createElement('input');
+                    commentIdInput.type = 'hidden';
+                    commentIdInput.name = 'commentId';
+                    commentIdInput.value = commentId;
+                    form.appendChild(commentIdInput);
+                    
+                    const reasonInput = document.createElement('input');
+                    reasonInput.type = 'hidden';
+                    reasonInput.name = 'reason';
+                    reasonInput.value = result.value;
+                    form.appendChild(reasonInput);
+                    
+                    document.body.appendChild(form);
+                    form.submit();
+                }
+            });
+        }
+        async function sharePostDetail(postId, title) {
+            const url = window.location.origin + '/posts/view/' + postId;
+            const shareData = {
+                title: title || 'Check out this achievement!',
+                text: 'Sharing an exciting achievement from Duinophile!',
+                url: url
+            };
+
+            try {
+                if (navigator.share) {
+                    await navigator.share(shareData);
+                } else {
+                    await navigator.clipboard.writeText(url);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Link Copied!',
+                        text: 'Post link copied to clipboard.',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+            } catch (err) {
+                console.error('Error sharing:', err);
+            }
+        }
+    </script>
+</div>

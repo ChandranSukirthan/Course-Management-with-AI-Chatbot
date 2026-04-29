@@ -1,0 +1,64 @@
+<div th:fragment="main">
+    <div style="max-width: 560px; margin: 2rem auto;">
+        <div class="form-card">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.75rem;">
+                <a th:href="@{/admin/dashboard}" class="btn btn-sm btn-secondary">← Back</a>
+                <h2 style="margin:0; color:var(--navy);">Add New User</h2>
+            </div>
+
+            <div th:if="${error}" class="alert alert-error">⚠️ <span th:text="${error}">Error</span></div>
+
+            <form th:action="@{/admin/add-user}" th:object="${newUser}" method="post">
+                <!-- Role selector — shown first so admin picks role upfront -->
+                <div class="form-group">
+                    <label>Role <span style="color:var(--red);">*</span></label>
+                    <select name="targetRole" required>
+                        <option value="ADMIN">👑 Admin</option>
+                        <option value="STAFF">🛠️ Staff</option>
+                        <option value="USER" selected>🎓 Student</option>
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" th:field="*{fullName}" placeholder="e.g., Jane Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Username <span style="color:var(--red);">*</span></label>
+                        <input type="text" th:field="*{username}" placeholder="e.g., janedoe" required>
+                        <span th:if="${#fields.hasErrors('username')}" th:errors="*{username}"
+                            style="color:var(--red); font-size: 0.8rem; display:block; margin-top:0.3rem;"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email <span style="color:var(--red);">*</span></label>
+                    <input type="email" th:field="*{email}" placeholder="email@example.com" required>
+                    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}"
+                        style="color:var(--red); font-size: 0.8rem; display:block; margin-top:0.3rem;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Password <span style="color:var(--red);">*</span></label>
+                    <input type="password" th:field="*{password}"
+                        placeholder="Min 8 chars, uppercase, lowercase, number, symbol" required>
+                    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}"
+                        style="color:var(--red); font-size: 0.8rem; display:block; margin-top:0.3rem;"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm Password <span style="color:var(--red);">*</span></label>
+                    <input type="password" th:field="*{confirmPassword}" placeholder="Repeat password" required>
+                    <span th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}"
+                        style="color:var(--red); font-size: 0.8rem; display:block; margin-top:0.3rem;"></span>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:0.5rem;">
+                    <button type="submit" class="btn btn-green">Create User</button>
+                    <a th:href="@{/admin/dashboard}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

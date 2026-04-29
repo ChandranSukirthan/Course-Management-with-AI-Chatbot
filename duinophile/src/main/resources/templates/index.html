@@ -1,0 +1,49 @@
+<div th:fragment="main">
+    <!-- Hero Section -->
+    <div style="padding: 4rem 0 3rem; text-align: left; max-width: 700px;">
+        <h1 style="font-size: 3.5rem; font-weight: 900; color: var(--navy); line-height: 1.1; margin-bottom: 1rem;">
+            LEARN. BUILD. SHARE.
+        </h1>
+        <p style="font-size: 1.1rem; color: var(--text-muted); margin-bottom: 2rem; max-width: 580px; line-height: 1.6;">
+            Master the basics of electronics and Arduino through gamified learning, community challenges, and an AI-powered tutor.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+            <a th:href="${currentUser != null ? '/courses/list' : '/users/login?message=Log in required to start learning'}" 
+               class="btn btn-lg btn-pulse">Get Started</a>
+            <a th:if="${currentUser != null}" th:href="@{/posts/feed}" class="btn btn-lg btn-outline">Community Feed</a>
+        </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 1rem;">
+        <div class="card" style="animation-delay: 0.05s;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🤖</div>
+            <h3 style="color: var(--navy);">AI Tutor</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+                Get instant help from DuinoBot whenever you're stuck on a concept.
+            </p>
+            <button type="button" class="btn btn-sm" style="margin-top: 1rem;"
+                onclick="document.getElementById('chatbot-toggle')?.click();">
+                Open Messenger
+            </button>
+        </div>
+        <div class="card" style="animation-delay: 0.12s;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🏆</div>
+            <h3 style="color: var(--navy);">Gamified Learning</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+                Earn points by completing lessons and scoring well in quizzes.
+            </p>
+            <a th:if="${currentUser != null}" th:href="@{/courses/list}" class="btn btn-sm btn-green" style="margin-top: 1rem;">Browse Courses</a>
+            <a th:if="${currentUser == null}" th:href="@{/users/login?message=Login to see courses}" class="btn btn-sm btn-green" style="margin-top: 1rem;">Join to Learn</a>
+        </div>
+        <div class="card" style="animation-delay: 0.20s;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">💬</div>
+            <h3 style="color: var(--navy);">Social Interaction</h3>
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+                Connect with other scholars, share projects, and leave feedback.
+            </p>
+            <a th:if="${currentUser != null}" th:href="@{/posts/feed}" class="btn btn-sm btn-outline" style="margin-top: 1rem;">Visit Feed</a>
+            <a th:if="${currentUser == null}" th:href="@{/users/login?message=Login to join the community}" class="btn btn-sm btn-outline" style="margin-top: 1rem;">Join Community</a>
+        </div>
+    </div>
+</div>

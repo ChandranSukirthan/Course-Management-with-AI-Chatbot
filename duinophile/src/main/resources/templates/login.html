@@ -1,0 +1,36 @@
+<div th:fragment="main">
+    <div style="max-width: 420px; margin: 4rem auto;">
+        <div class="form-card">
+            <h2 style="text-align: center; color: var(--navy); margin-bottom: 1.5rem;">Log In</h2>
+
+            <div th:if="${param.message}" class="alert alert-info">
+                <span>ℹ️</span>
+                <span th:text="${param.message}">Info message</span>
+            </div>
+
+            <div th:if="${loginError}" class="alert alert-error">
+                <span th:text="${loginError}">Login error</span>
+            </div>
+
+            <form th:action="@{/users/login}" method="post">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 0.5rem;">Log In</button>
+                <div style="text-align: center; margin-top: 0.8rem;">
+                    <a th:href="@{/users/forgot-password}" style="color: var(--text-muted); font-size: 0.85rem; font-weight:600; text-decoration:none;">Forgot Password?</a>
+                </div>
+            </form>
+
+            <p style="text-align: center; margin-top: 1.2rem; color: var(--text-muted); font-size: 0.9rem;">
+                Don't have an account?
+                <a th:href="@{/users/register}" style="color: var(--blue); font-weight: 700;">Sign up</a>
+            </p>
+        </div>
+    </div>
+</div>

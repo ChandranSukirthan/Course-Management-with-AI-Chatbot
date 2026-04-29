@@ -1,0 +1,211 @@
+<div th:fragment="main" style="max-width: 800px; margin: 0 auto; padding: 2rem 0;">
+    <div style="text-align: center; margin-bottom: 2.5rem;">
+        <h1 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 0.5rem; color: #1a1a1a;">Create <span style="color: #2563eb;">New</span> Achievement</h1>
+        <p style="color: #666; font-size: 1.1rem;">Share your Arduino progress with the Duinophile community</p>
+        <div style="margin-top: 1.5rem;">
+            <a th:href="@{/profile}" class="btn btn-secondary" style="border-radius: 50px; padding: 0.6rem 1.5rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+                ← Back to Profile
+            </a>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 20px rgba(0,0,0,0.05); overflow: hidden;">
+        <div style="height: 6px; background: #10b981;"></div>
+        <div style="padding: 2.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.25rem; color: #111827;">Achievement Details</h2>
+            <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 2rem;">Fields marked with a <span style="color: #10b981;">dot</span> are required.</p>
+
+            <form th:action="@{/posts/create}" th:object="${newPost}" method="post" enctype="multipart/form-data" id="postForm" onsubmit="return validatePostForm(event)">
+
+                <!-- Title Field -->
+                <div class="form-group" style="margin-bottom: 1.75rem;">
+                    <label for="title" style="font-weight: 600; font-size: 0.9rem; color: #374151; display: flex; align-items: center; gap: 4px; margin-bottom: 0.5rem;">
+                        Title <span style="color: #10b981; font-size: 1.2rem;">•</span>
+                    </label>
+                    <input type="text" th:field="*{title}" id="title" required minlength="10"
+                           title="Please lengthen this text to 10 characters or more"
+                           placeholder="e.g. Completed Advanced Arduino Sensor Course"
+                           style="width: 100%; padding: 0.85rem 1.15rem; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 1rem; transition: all 0.25s; background-color: #fff !important; color: #111827;"
+                           onfocus="this.style.borderColor='#2563eb'; this.style.boxShadow='0 0 0 4px rgba(37, 99, 235, 0.1)'; this.style.outline='none';"
+                           onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';"/>
+                </div>
+
+                <!-- Achievement Type Field -->
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="achievementType" style="font-weight: 600; font-size: 0.9rem; color: #374151; display: flex; align-items: center; gap: 4px; margin-bottom: 0.6rem;">
+                        Achievement Type <span style="color: #10b981; font-size: 1.2rem;">•</span>
+                    </label>
+                    <div style="position: relative;">
+                        <select th:field="*{achievementType}" id="achievementType" required
+                                style="width: 100%; padding: 0.85rem 1.15rem; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 1rem; appearance: none; background-color: #fff !important; cursor: pointer; color: #111827;">
+                            <option value="">Select an option</option>
+                            <option value="STREAK_7">7-Day Streak</option>
+                            <option value="STREAK_30">30-Day Streak</option>
+                            <option value="HARDWARE_CHALLENGE">Hardware Challenge</option>
+                            <option value="MODULE_COMPLETED">Module Completed</option>
+                            <option value="ARDUINO_TASK">Arduino Task Completed</option>
+                            <option value="OTHER">Other</option>
+                        </select>
+                        <div style="position: absolute; right: 1.25rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #6b7280; font-size: 0.75rem;">▼</div>
+                    </div>
+
+                    <!-- Decorative Tags -->
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.25rem;">
+                        <span style="background: #ecfdf5; color: #059669; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.725rem; font-weight: 750; border: 1.5px solid #10b98140; letter-spacing: 0.02em;">STREAK_7</span>
+                        <span style="background: #ecfdf5; color: #059669; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.725rem; font-weight: 750; border: 1.5px solid #10b98140; letter-spacing: 0.02em;">STREAK_30</span>
+                        <span style="background: #f5f3ff; color: #7c3aed; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.725rem; font-weight: 750; border: 1.5px solid #a78bfa80; letter-spacing: 0.02em;">HARDWARE_CHALLENGE</span>
+                        <span style="background: #f5f3ff; color: #7c3aed; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.725rem; font-weight: 750; border: 1.5px solid #a78bfa80; letter-spacing: 0.02em;">MODULE_COMPLETED</span>
+                        <span style="background: #fffbeb; color: #d97706; padding: 0.35rem 0.85rem; border-radius: 9999px; font-size: 0.725rem; font-weight: 750; border: 1.5px solid #fbbf2440; letter-spacing: 0.02em;">ARDUINO_TASK</span>
+                    </div>
+                </div>
+
+                <!-- Description Field -->
+                <div class="form-group" style="margin-bottom: 2.5rem;">
+                    <label for="content" style="font-weight: 600; font-size: 0.9rem; color: #374151; display: block; margin-bottom: 0.6rem;">Description</label>
+                    <textarea th:field="*{content}" id="content" rows="4" required minlength="10"
+                              title="Please lengthen this text to 10 characters or more"
+                              placeholder="e.g., Finally finished the LED cube project! What did you learn?"
+                              style="width: 100%; padding: 0.85rem 1.15rem; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 1rem; resize: vertical; min-height: 140px; background-color: #fff !important; color: #111827;"></textarea>
+                </div>
+
+                <!-- Image Upload Field -->
+                <div class="form-group" style="margin-bottom: 2.5rem;">
+                    <label for="imageFile" style="font-weight: 600; font-size: 0.9rem; color: #374151; display: block; margin-bottom: 0.6rem;">Upload Image / Screenshot</label>
+                    <div style="border: 2px dashed #e5e7eb; border-radius: 12px; padding: 2.5rem; text-align: center; background: #fff; transition: all 0.25s;"
+                         onmouseover="this.style.borderColor='#2563eb'; this.style.background='#f8faff';"
+                         onmouseout="this.style.borderColor='#e5e7eb'; this.style.background='#fff';">
+                        <input type="file" id="imageFile" name="imageFile" accept=".jpg,.jpeg,.png,.gif" style="display: none;" onchange="updateFileLabel(this)"/>
+                        <label for="imageFile" style="cursor: pointer; display: block;">
+                            <div style="font-size: 2rem; margin-bottom: 0.75rem; filter: grayscale(1);">🖼️</div>
+                            <div id="fileLabel" style="font-weight: 700; color: #111827;">Click to upload image</div>
+                            <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.4rem;">JPG, PNG, GIF — Max 20MB</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Level Field -->
+                <div class="form-group" style="margin-bottom: 2.5rem;">
+                    <label for="level" style="font-weight: 600; font-size: 0.9rem; color: #374151; display: block; margin-bottom: 0.6rem;">Level / Value (0-20)</label>
+                    <input type="number" th:field="*{level}" id="level" min="0" max="20" placeholder="20"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, ''); if(this.value > 20) this.value = 20;"
+                           style="width: 100%; padding: 0.85rem 1.15rem; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 1rem; background-color: #fff !important; color: #111827;"/>
+                    <p style="font-size: 0.8rem; color: #6b7280; margin-top: 0.75rem; display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <span style="font-size: 1.1rem; line-height: 1;">ⓘ</span> Numbers only — enter the streak length or level (Max 20).
+                    </p>
+                </div>
+
+                <!-- Public Visibility Field -->
+                <div style="background: #f3f4f6; padding: 1.25rem; border-radius: 12px; margin-bottom: 2.5rem; display: flex; align-items: flex-start; gap: 1rem;">
+                    <div style="display: flex; align-items: center; height: 1.5rem;">
+                        <input type="checkbox" th:field="*{publiclyVisible}" id="publiclyVisible" style="width: 1.25rem; height: 1.25rem; cursor: pointer; accent-color: #2563eb;">
+                    </div>
+                    <div>
+                        <label for="publiclyVisible" style="font-weight: 700; color: #111827; cursor: pointer; display: block; margin-bottom: 0.1rem;">Make this post public</label>
+                        <span style="font-size: 0.85rem; color: #4b5563;">Visible on the community home page for others to see and react to.</span>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" style="width: 100%; padding: 1.125rem; background: #000; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.75rem; transition: transform 0.1s;"
+                        onmouseover="this.style.opacity='0.9';" onmouseout="this.style.opacity='1';" onmousedown="this.style.transform='scale(0.995)';" onmouseup="this.style.transform='scale(1)';">
+                    ✏️ Publish Achievement
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const titleInput = document.getElementById('title');
+        const contentInput = document.getElementById('content');
+        const typeInput = document.getElementById('achievementType');
+        const imageFileInput = document.getElementById('imageFile');
+
+        function validatePostForm(event) {
+            let errorMsg = "";
+            if (!titleInput.value || titleInput.value.length < 10) {
+                errorMsg = "Title must be at least 10 characters long.";
+            } else if (!typeInput.value) {
+                errorMsg = "Please select an Achievement Type.";
+            } else if (!contentInput.value || contentInput.value.length < 10) {
+                errorMsg = "Description must be at least 10 characters long.";
+            }
+
+            if (imageFileInput.files && imageFileInput.files[0]) {
+                const file = imageFileInput.files[0];
+                const fileSizeInMB = file.size / (1024 * 1024);
+                const fileName = file.name.toLowerCase();
+                const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                const extension = fileName.split('.').pop();
+
+                if (fileSizeInMB > 20) {
+                    errorMsg = "File size must be less than 20MB.";
+                } else if (!allowedExtensions.includes(extension)) {
+                    errorMsg = "Only JPG, PNG and GIF formats are allowed.";
+                }
+            }
+
+            if (errorMsg) {
+                event.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Form Error',
+                    text: errorMsg,
+                    confirmButtonColor: '#2563eb'
+                });
+                return false;
+            }
+            return true;
+        }
+
+        function validateLength(input) {
+            if (input.value.length > 0 && input.value.length < 10) {
+                input.setCustomValidity('Please lengthen this text to 10 characters or more');
+                input.reportValidity();
+            } else {
+                input.setCustomValidity('');
+            }
+        }
+
+        titleInput.addEventListener('blur', () => validateLength(titleInput));
+        contentInput.addEventListener('blur', () => validateLength(contentInput));
+
+        function updateFileLabel(input) {
+            const label = document.getElementById('fileLabel');
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const fileSizeInMB = file.size / (1024 * 1024);
+                const fileName = file.name.toLowerCase();
+                const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                const extension = fileName.split('.').pop();
+
+                if (fileSizeInMB > 20) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'File size must be less than 20MB.',
+                        confirmButtonColor: '#2563eb'
+                    });
+                    input.value = "";
+                    label.innerText = "Click to upload image";
+                    return;
+                }
+
+                if (!allowedExtensions.includes(extension)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Format',
+                        text: 'Only JPG, PNG and GIF formats are allowed.',
+                        confirmButtonColor: '#2563eb'
+                    });
+                    input.value = "";
+                    label.innerText = "Click to upload image";
+                    return;
+                }
+
+                label.innerText = input.files[0].name;
+                label.parentElement.parentElement.style.borderColor = '#2563eb';
+                label.parentElement.parentElement.style.background = '#f0f4ff';
+            }
+        }
+    </script>
+</div>

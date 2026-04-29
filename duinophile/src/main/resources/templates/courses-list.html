@@ -1,0 +1,98 @@
+<div th:fragment="main">
+    <div class="page-header">
+        <h1>Courses</h1>
+        <a th:if="${currentUser != null and (currentUser.role == 'STAFF' or currentUser.role == 'ADMIN')}"
+           th:href="@{/courses/create}" class="btn btn-green">+ Create Course</a>
+    </div>
+
+    <!-- Empty state -->
+    <div th:if="${#lists.isEmpty(allCourses)}" class="empty-state">
+        <span class="empty-icon">📚</span>
+        <p>No courses available yet. Check back later!</p>
+    </div>
+
+    <!-- All Courses Grid -->
+    <div class="course-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(290px,1fr)); gap:1.2rem;"
+         th:if="${!#lists.isEmpty(allCourses)}">
+        <div th:each="course, cs : ${allCourses}"
+             th:classappend="${cs.index % 3 == 0 ? 'green' : (cs.index % 3 == 1 ? 'yellow' : 'blue')}"
+             class="course-card" style="position:relative;">
+             
+             <!-- Entire Card Link -->
+             <a th:href="@{/courses/view/{id}(id=${course.id})}" style="position:absolute; top:0; left:0; right:0; bottom:0; z-index:1;"></a>
+
+            <!-- Level badge + Status badge -->
+            <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.6rem; flex-wrap:wrap;">
+                <span th:if="${course.level == 'BEGINNER' or course.level == null}"
+                      style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.25); border-radius:20px; padding:0.2rem 0.6rem;">
+                    🌱 Beginner
+                </span>
+                <span th:if="${course.level == 'INTERMEDIATE'}"
+                      style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.25); border-radius:20px; padding:0.2rem 0.6rem;">
+                    ⚡ Intermediate
+                </span>
+                <span th:if="${course.level == 'ADVANCED'}"
+                      style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.25); border-radius:20px; padding:0.2rem 0.6rem;">
+                    🔥 Advanced
+                </span>
+
+                <span th:if="${enrolledIds != null and enrolledIds.contains(course.id)}"
+                      style="font-size:0.7rem; font-weight:700; background:rgba(255,255,255,0.2); border-radius:20px; padding:0.2rem 0.6rem;">
+                    ✅ Enrolled
+                </span>
+            </div>
+
+            <h3 th:text="${course.title}" style="margin-bottom:0.5rem; font-size:1.05rem;">Course Title</h3>
+            <p th:text="${course.description}"
+               style="font-size:0.85rem; opacity:0.9; margin-bottom:1rem; line-height:1.4;
+                      overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; line-clamp:2; -webkit-box-orient:vertical;">
+                Description
+            </p>
+
+            <!-- Progress Bar for Enrolled Courses -->
+            <div th:if="${enrolledIds != null and enrolledIds.contains(course.id) and progressMap != null}" style="margin-bottom:1rem;">
+                <div class="progress-bar-wrap" style="height:6px; background:rgba(255,255,255,0.2);">
+                    <div class="progress-bar-fill" th:style="'width:' + ${progressMap.getOrDefault(course.id, 0)} + '%'"></div>
+                </div>
+                <div style="font-size:0.7rem; color:white; font-weight:700; margin-top:0.3rem; opacity:0.9;" 
+                      th:text="${progressMap.getOrDefault(course.id, 0)} + '% Complete'">30% Complete</div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display:flex; gap:0.6rem; margin-top:auto; position:relative; z-index:2;">
+                <!-- Already enrolled (USER): show Continue -->
+                <a th:if="${currentUser != null and currentUser.role == 'USER' and enrolledIds != null and enrolledIds.contains(course.id)}"
+                   th:href="@{/courses/view/{id}(id=${course.id})}"
+                   class="btn btn-sm" style="background:rgba(255,255,255,0.3); border:1px solid rgba(255,255,255,0.6); flex:1; text-align:center;">
+                    Continue →
+                </a>
+
+                <!-- Not enrolled (USER only): Enroll button / Locked state -->
+                <form th:if="${currentUser != null and currentUser.role == 'USER' and !(enrolledIds != null and enrolledIds.contains(course.id))}"
+                      th:action="@{/courses/enroll/{id}(id=${course.id})}" method="post" style="flex:1;">
+                    
+                    <button th:if="${currentUser.points >= course.minimumPointsRequired}" type="submit" class="btn btn-sm"
+                            style="width:100%; background:rgba(255,255,255,0.9); color:#1a1a2e; font-weight:800; border:none;">
+                        Enroll Now
+                    </button>
+                    
+                    <button th:if="${currentUser.points < course.minimumPointsRequired}" type="button" class="btn btn-sm" disabled
+                            style="width:100%; background:rgba(255,255,255,0.4); color:#1a1a2e; font-weight:800; border:none; cursor:not-allowed;"
+                            th:title="'Requires ' + ${course.minimumPointsRequired} + ' points'">
+                        🔒 Locked (<span th:text="${course.minimumPointsRequired}"></span> Pts)
+                    </button>
+                </form>
+
+                <a th:href="@{/courses/view/{id}(id=${course.id})}"
+                   class="btn btn-sm" style="background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.4);">
+                    View
+                </a>
+
+                <!-- Staff/Admin management -->
+                <a th:if="${currentUser != null and (currentUser.role == 'STAFF' or currentUser.role == 'ADMIN')}"
+                   th:href="@{/courses/edit/{id}(id=${course.id})}"
+                   class="btn btn-sm" style="background:rgba(0,0,0,0.15); border:none;">✏️</a>
+            </div>
+        </div>
+    </div>
+</div>

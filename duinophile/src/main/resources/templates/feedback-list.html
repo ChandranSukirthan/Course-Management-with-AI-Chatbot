@@ -1,0 +1,30 @@
+<div th:fragment="main">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h1 th:text="'Leave a Review for ' + ${course != null ? course.title : 'Course'}">Leave a Review</h1>
+        <a th:href="@{/courses/view/{id}(id=${feedback.courseId})}" class="btn btn-secondary">← Back to Course</a>
+    </div>
+
+    <!-- Flash Messages -->
+    <div th:if="${error}" style="background-color: #fee; border: 1.5px solid #fcc; color: var(--red); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem;">
+        <span th:text="${error}">Error message</span>
+    </div>
+    <div th:if="${success}" style="background-color: #eefbee; border: 1.5px solid #cceccc; color: var(--green); padding: 0.8rem 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-weight: 600; font-size: 0.9rem;">
+        <span th:text="${success}">Success message</span>
+    </div>
+
+    <!-- Submit Feedback Form -->
+    <div class="form-card" style="max-width:480px; margin-bottom:2.5rem;">
+        <form th:action="@{/feedback/create}" th:object="${feedback}" method="post">
+            <input type="hidden" th:field="*{courseId}">
+            <div class="form-group">
+                <label>Rating</label>
+                <input type="number" th:field="*{rating}" min="1" max="5" required placeholder="1 – 5">
+            </div>
+            <div class="form-group">
+                <label>Feedback</label>
+                <textarea th:field="*{content}" rows="4" placeholder="What did you think about this course? (Optional)"></textarea>
+            </div>
+            <button type="submit" class="btn">Submit Review</button>
+        </form>
+    </div>
+</div>

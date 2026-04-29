@@ -1,0 +1,170 @@
+<div th:fragment="main">
+
+    <!-- Header Bar -->
+    <div class="header-roadmap">
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <a href="/courses/list" class="btn-roadmap" style="font-size:0.85rem; padding:0.4rem 0.9rem;">← All Courses</a>
+            <span class="header-title" th:text="${course.title}">Course Name</span>
+        </div>
+        <div class="header-actions">
+            <a th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}"
+               th:href="@{/lessons/create/{courseId}(courseId=${course.id})}"
+               class="btn-roadmap">Add Lesson</a>
+
+            <!-- Edit Course -->
+            <a th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}"
+               th:href="@{/courses/edit/{id}(id=${course.id})}"
+               class="btn-roadmap">Edit Course</a>
+               
+            <!-- Delete Course -->
+            <form th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}"
+                  th:action="@{/courses/delete/{id}(id=${course.id})}" method="post"
+                  onsubmit="confirmDelete(event, 'Delete this entire course?')" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-red">Delete Course</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== ROADMAP VIEW ===== -->
+    <div class="roadmap-container">
+        <!-- Loop lessons -->
+        <div th:each="lesson, ls : ${lessons}" class="roadmap-block" 
+             th:classappend="${ls.index % 2 == 0 ? 'align-left' : 'align-right'}">
+            
+            <div th:if="${!ls.first}" class="path-line"></div>
+
+            <!-- Single Combined Lesson Card -->
+            <div class="road-card-simple lesson-card-style">
+                <!-- Card Icon -->
+                <div class="card-icon">
+                    <div class="icon-shape"></div>
+                </div>
+
+                <div class="card-text">
+                    <div class="card-label">Lesson <span th:text="${ls.count}">1</span></div>
+                    <div class="card-title" th:text="${lesson.title}">Lesson Title</div>
+                    
+                    <!-- Integrated Quiz Status Badge -->
+                    <div th:if="${lesson.quiz != null and !#lists.isEmpty(lesson.quiz)}" class="quiz-badge">
+                        <span class="quiz-icon">📝</span>
+                        <span th:with="totalPoints=${#aggregates.sum(lesson.quiz.![points])}" 
+                              th:text="${totalPoints} + ' Pts Quiz'">10 Pts Quiz</span>
+                    </div>
+
+                    <!-- Completed Badge -->
+                    <div th:if="${completedLessonIds != null and completedLessonIds.contains(lesson.id)}" 
+                         style="background:var(--green); width:32px; height:32px; border-radius:50%; display:flex; 
+                                align-items:center; justify-content:center; position:absolute; top:-10px; right:-10px; 
+                                border:3px solid white; box-shadow:0 3px 8px rgba(0,0,0,0.2); z-index:2; font-size:0.85rem;">
+                         ✅
+                    </div>
+                </div>
+
+                <!-- Link to Lesson View (where management buttons are) -->
+                <a th:href="@{/lessons/view/{id}(id=${lesson.id})}" class="card-overlay-link"></a>
+            </div>
+        </div>
+
+        <!-- Empty state -->
+        <div th:if="${#lists.isEmpty(lessons)}" style="text-align:center; padding:4rem; color:var(--text-muted); font-size:1.1rem;">
+            No lessons yet. Click <strong>Add Lesson</strong> above!
+        </div>
+    </div>
+    
+    <!-- ===== COURSE REVIEWS ===== -->
+    <div id="course-reviews" style="max-width: 850px; margin: 0 auto; padding-top: 2rem; padding-bottom: 3rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="color: #1e88e5; font-size: 1.6rem; font-weight: 800; margin: 0;">Course Reviews</h2>
+            <a th:href="@{/feedback/course/{courseId}(courseId=${course.id})}" 
+               style="display: inline-block; background: #1e88e5; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; font-size: 0.95rem; text-decoration: none; cursor: pointer; transition: 0.2s;">
+               + Leave a Review
+            </a>
+        </div>
+
+        <!-- Existing Feedback Cards -->
+        <div th:if="${feedbacks == null or #lists.isEmpty(feedbacks)}" style="color: #6c757d; font-size:0.95rem; text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 12px;">
+            No reviews yet. Be the first to share your thoughts!
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem;" th:if="${feedbacks != null and !#lists.isEmpty(feedbacks)}">
+            <div th:each="fb : ${feedbacks}" style="background: white; border-radius: 12px; padding: 1.2rem; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid #eaeaea;">
+                <div style="margin-bottom:0.6rem; display:flex; align-items:center; justify-content:space-between;">
+                    <div>
+                        <span th:each="i : ${#numbers.sequence(1, fb.rating)}" style="color: #f39c12; font-size: 1.3em;">★</span>
+                    </div>
+                    <div>
+                        <span th:if="${fb.status == 'PENDING'}" style="background: #fff3cd; color: #856404; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">PENDING</span>
+                        <span th:if="${fb.status == 'APPROVED' and currentUser != null and currentUser.id == fb.userId}" style="background: #d4edda; color: #155724; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700;">APPROVED</span>
+                    </div>
+                </div>
+                <p th:if="${fb.content != null and !#strings.isEmpty(fb.content)}" th:text="${fb.content}" style="font-size:0.92rem; margin-bottom:1rem; color: #333; line-height: 1.4;"></p>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-top: 1px solid #f0f0f0; padding-top: 0.8rem;">
+                    <span style="font-size:0.8rem; color: #777; font-weight: 600;" th:text="'— ' + ${fb.username != null ? fb.username : 'Scholar'}"></span>
+                    
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <form th:if="${fb.status == 'PENDING' and currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}" th:action="@{/feedback/approve/{id}(id=${fb.id})}" method="post" style="margin:0;">
+                            <button type="submit" style="background: #28a745; color: white; border: none; padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Approve</button>
+                        </form>
+                        <a th:if="${currentUser != null and currentUser.id == fb.userId}" th:href="@{/feedback/edit/{id}(id=${fb.id})}" style="background: transparent; color: #6c757d; border: 1px solid #ccc; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-decoration: none;">Edit</a>
+                        <form th:if="${currentUser != null and (currentUser.id == fb.userId or currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}" th:action="@{/feedback/delete/{id}(id=${fb.id})}" method="post" onsubmit="confirmDelete(event, 'Delete feedback?')" style="margin:0;">
+                            <button type="submit" style="background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Styles match screenshot look-and-feel */
+        .header-roadmap {
+            background: #28a745; border-radius: 14px; padding: 0.8rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;
+        }
+        .header-title { color: white; font-weight: 800; font-size: 1.4rem; }
+        .header-actions { display: flex; gap: 1rem; }
+        .btn-roadmap {
+            background: white; color: #28a745; border: 2px solid white;
+            padding: 0.5rem 1.2rem; border-radius: 10px; font-weight: 700;
+            text-decoration: none; transition: 0.2s; cursor: pointer; font-size: 0.9rem;
+        }
+        .btn-roadmap:hover { background: rgba(255,255,255,0.9); transform: translateY(-2px); }
+        .btn-red-hover:hover { background: #dc3545; color: white; border-color: #dc3545; }
+
+        .roadmap-container { max-width: 850px; margin: 0 auto; padding-bottom: 5rem; position: relative;}
+        .roadmap-block { display: flex; margin-bottom: 4.5rem; position: relative; }
+        .align-left { justify-content: flex-start; }
+        .align-right { justify-content: flex-end; }
+
+        .path-line {
+            position: absolute; top: -4.5rem; left: 100px; width: 3px; height: 4.5rem;
+            background: #e0e0e0; z-index: 0;
+        }
+        .align-right .path-line { left: auto; right: 100px; }
+
+        .road-card-simple {
+            width: 200px; background: #1e88e5; border-radius: 20px;
+            padding: 1.3rem 1rem; display: flex; flex-direction: column;
+            align-items: center; text-align: center; position: relative;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.18); transition: 0.3s;
+            cursor: pointer; text-decoration: none; color: white; z-index: 1;
+        }
+        .road-card-simple:hover { transform: translateY(-5px); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
+
+        .card-icon {
+            background: #90caf9; width: 90px; height: 100px; border-radius: 10px;
+            margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: center;
+        }
+        .icon-shape { background: rgba(255,255,255,0.4); width: 50%; height: 60%; border-radius: 2px; }
+
+        .card-label { font-size: 0.75rem; font-weight: 800; opacity: 0.85; margin-bottom: 0.2rem; text-transform: uppercase; letter-spacing: 0.05em;}
+        .card-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 0.6rem; line-height: 1.2; }
+        
+        .quiz-badge {
+            background: rgba(0,0,0,0.3); padding: 0.35rem 0.7rem; border-radius: 12px;
+            font-size: 0.7rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; 
+        }
+
+        .card-overlay-link { position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; }
+    </style>
+</div>

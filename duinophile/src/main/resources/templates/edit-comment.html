@@ -1,0 +1,18 @@
+<div th:fragment="main">
+    <div class="page-header">
+        <h1>Edit Comment</h1>
+    </div>
+    
+    <div class="card" style="max-width: 600px; margin: 0 auto;">
+        <form th:action="@{/comments/update/{id}(id=${comment.id})}" th:object="${comment}" method="post">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="content" style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Comment Content</label>
+                <textarea id="content" th:field="*{content}" rows="3" class="form-control" required style="width: 100%; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.75rem; font-family: inherit; font-size: 1rem;"></textarea>
+            </div>
+            <div style="display:flex; gap: 1rem; justify-content: flex-end;">
+                <a th:href="@{/posts/feed}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Update Comment</button>
+            </div>
+        </form>
+    </div>
+</div>

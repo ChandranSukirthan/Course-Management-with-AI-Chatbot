@@ -1,0 +1,139 @@
+<div th:fragment="main">
+    <div style="max-width: 720px; margin: 2rem auto;">
+        <div class="form-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <h2 style="color:var(--navy); margin-bottom:0;">Create Lesson</h2>
+            </div>
+            <form th:action="@{/lessons/create}" th:object="${lesson}" method="post" enctype="multipart/form-data">
+                <input type="hidden" th:field="*{courseId}">
+
+                <div class="form-group">
+                    <label>Lesson Name</label>
+                    <input type="text" th:field="*{title}" placeholder="e.g., Understanding Microcontrollers" required>
+                    <span th:if="${#fields.hasErrors('title')}" th:errors="*{title}" style="color:var(--red); font-size:0.75rem; font-weight:700; display:block; margin-top:0.3rem;"></span>
+                </div>
+                <div class="form-group">
+                    <label>Lesson Content</label>
+                    <textarea th:field="*{content}" placeholder="Explain the concept here... (HTML supported)" rows="8" required></textarea>
+                    <span th:if="${#fields.hasErrors('content')}" th:errors="*{content}" style="color:var(--red); font-size:0.75rem; font-weight:700; display:block; margin-top:0.3rem;"></span>
+                </div>
+
+                <!-- PDF Material Upload -->
+                <div class="form-group" style="background:#f8f9fa; padding:1rem; border-radius:10px; border:1px dashed var(--blue-mid);">
+                    <label style="color:var(--blue); font-weight:700;">📂 Lesson Materials (PDF)</label>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:-0.4rem; margin-bottom:0.8rem;">Upload a PDF guide or study material for this lesson.</p>
+                    <input type="file" name="materialFile" accept="application/pdf" style="padding:0.5rem; background:white; border:1.5px solid #eee;">
+                    <span th:if="${#fields.hasErrors('materialName')}" th:errors="*{materialName}" style="color:var(--red); font-size:0.75rem; font-weight:700; display:block; margin-top:0.5rem;"></span>
+                </div>
+
+                <!-- MCQ / Quiz Section -->
+                <div style="border-top:2px solid var(--border); margin-top:1.5rem; padding-top:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                        <h3 style="color:var(--navy); margin-bottom:0;">Quiz Questions</h3>
+                        <button type="button" onclick="addQuestion()" class="btn btn-sm" style="background:var(--blue); color:white; border:none;">+ Add Question</button>
+                    </div>
+
+                    <div th:if="${#fields.hasErrors('quiz')}" style="margin-bottom:1rem; font-size:0.85rem; padding:0.8rem; background:#fee; border:1px solid #fcc; color:var(--red); border-radius:6px;">
+                        <span th:errors="*{quiz}" style="font-weight:600;"></span>
+                    </div>
+
+                    <div id="quiz-container"></div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn btn-green">Create Lesson</button>
+                    <a th:href="@{/courses/view/{id}(id=${lesson.courseId})}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <style>
+        .quiz-block {
+            background: var(--blue-light, #eef4ff);
+            border: 1.5px solid var(--blue-mid, #c7d9ff);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        .quiz-block h4 { color: var(--navy); margin-bottom: 0.75rem; font-size: 0.9rem; }
+        .quiz-block .remove-btn {
+            position: absolute; top: 0.75rem; right: 0.75rem;
+            background: #fee; border: 1px solid #fcc; color: #c00;
+            border-radius: 50%; width: 26px; height: 26px; font-size: 1rem;
+            cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center;
+        }
+        .opt-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
+        .opt-row input[type="radio"] { width: auto; margin: 0; accent-color: var(--green); }
+        .points-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+        .points-row label { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+        .points-row input[type="number"] { width: 80px; }
+    </style>
+
+    <script>
+        function addQuestion() {
+            const container = document.getElementById('quiz-container');
+            const i = container.querySelectorAll('.quiz-block').length;
+            const block = document.createElement('div');
+            block.className = 'quiz-block';
+            block.dataset.idx = i;
+            block.innerHTML = `
+                <button type="button" class="remove-btn" onclick="removeQuestion(this)" title="Remove">&#215;</button>
+                <h4>Question ${i + 1}</h4>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Question Text</label>
+                    <input type="text" name="quiz[${i}].question" placeholder="e.g., What is 'digitalRead' used for?" required>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Content / Context</label>
+                    <textarea name="quiz[${i}].content" placeholder="Provide context or explanation for this question (optional)" rows="2"></textarea>
+                </div>
+                <div style="margin-bottom:0.5rem;">
+                    <label style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Answer Options <span style="font-weight:400;">(select the correct one)</span></label>
+                </div>
+                <div class="opt-row">
+                    <input type="radio" name="quiz[${i}].correctOptionIndex" value="0">
+                    <input type="text" name="quiz[${i}].options[0]" placeholder="Option 1" style="flex:1;">
+                </div>
+                <div class="opt-row">
+                    <input type="radio" name="quiz[${i}].correctOptionIndex" value="1">
+                    <input type="text" name="quiz[${i}].options[1]" placeholder="Option 2" style="flex:1;">
+                </div>
+                <div class="opt-row">
+                    <input type="radio" name="quiz[${i}].correctOptionIndex" value="2">
+                    <input type="text" name="quiz[${i}].options[2]" placeholder="Option 3" style="flex:1;">
+                </div>
+                <div class="opt-row">
+                    <input type="radio" name="quiz[${i}].correctOptionIndex" value="3">
+                    <input type="text" name="quiz[${i}].options[3]" placeholder="Option 4" style="flex:1;">
+                </div>
+                <div class="points-row">
+                    <label>&#127942; Points for correct answer:</label>
+                    <input type="number" name="quiz[${i}].points" value="10" min="1" max="1000" placeholder="10">
+                </div>
+            `;
+            container.appendChild(block);
+        }
+
+        function removeQuestion(btn) {
+            btn.closest('.quiz-block').remove();
+            reindexQuestions();
+        }
+
+        function reindexQuestions() {
+            const blocks = document.querySelectorAll('#quiz-container .quiz-block');
+            blocks.forEach(function(block, idx) {
+                block.dataset.idx = idx;
+                var h4 = block.querySelector('h4');
+                if (h4) h4.textContent = 'Question ' + (idx + 1);
+                block.querySelectorAll('input[name], textarea[name]').forEach(function(input) {
+                    input.name = input.name.replace(/quiz\[\d+\]/, 'quiz[' + idx + ']');
+                });
+            });
+        }
+
+        // Add first question by default
+        addQuestion();
+    </script>
+</div>
