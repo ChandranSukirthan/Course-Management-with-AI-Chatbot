@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duinophile - Learning Platform</title>
+    <link rel="stylesheet" th:href="@{/css/main.css?v=3.2}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 for beautiful alerts -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- ── Premium Navbar Dropdown CSS ─────────────────────────────── -->
+    <style>
+    /* === TRIGGER BUTTON === */
+    .nav-item-dropdown { position: relative; list-style: none; }
+
+    .nav-profile-trigger {
+        display: flex; align-items: center; gap: 0.5rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 999px;
+        padding: 0.3rem 0.8rem 0.3rem 0.3rem;
+        cursor: pointer; color: var(--text-main, #e2e8f0);
+        font-family: inherit; font-size: 0.875rem; font-weight: 600;
+        outline: none; white-space: nowrap;
+        transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .nav-profile-trigger:hover,
+    .nav-item-dropdown:hover .nav-profile-trigger {
+        background: rgba(255,255,255,0.09);
+        border-color: rgba(0,151,157,0.5);
+        box-shadow: 0 0 0 3px rgba(0,151,157,0.13);
+    }
+
+    /* Avatar in trigger */
+    .trigger-avatar {
+        position: relative; width: 28px; height: 28px; flex-shrink: 0;
+    }
+    .trigger-avatar-img {
+        width: 28px; height: 28px; border-radius: 50%;
+        object-fit: cover; display: block;
+    }
+    .trigger-avatar-initials {
+        width: 28px; height: 28px; border-radius: 50%;
+        background: linear-gradient(135deg, #00979d, #7c3aed);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 0.7rem; font-weight: 800; color: white;
+    }
+    .trigger-avatar-dot {
+        position: absolute; bottom: 0; right: 0;
+        width: 8px; height: 8px; background: #22c55e;
+        border-radius: 50%; border: 2px solid #0b1120;
+    }
+    .trigger-label {
+        max-width: 80px; overflow: hidden;
+        text-overflow: ellipsis; white-space: nowrap;
+    }
+    .trigger-chevron {
+        opacity: 0.5; flex-shrink: 0;
+        transition: transform 0.25s ease;
+    }
+    .nav-item-dropdown:hover .trigger-chevron { transform: rotate(180deg); }
+
+    /* === DROPDOWN PANEL === */
+    .dropdown-panel {
+        position: absolute !important;
+        top: calc(100% + 0.65rem) !important;
+        right: 0 !important;
+        left: auto !important;
+        width: 256px !important;
+        background: rgba(9, 14, 28, 0.98) !important;
+        backdrop-filter: blur(24px) saturate(160%);
+        -webkit-backdrop-filter: blur(24px) saturate(160%);
+        border: 1px solid rgba(255,255,255,0.09) !important;
+        border-radius: 16px !important;
+        padding: 0.4rem !important;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(6px) scale(0.97);
+        transform-origin: top right;
+        transition: opacity 0.2s cubic-bezier(0.4,0,0.2,1),
+                    transform 0.2s cubic-bezier(0.4,0,0.2,1),
+                    visibility 0.2s;
+        z-index: 9999 !important;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.65),
+                    0 0 0 1px rgba(0,151,157,0.18),
+                    inset 0 1px 0 rgba(255,255,255,0.07) !important;
+        /* Reset any conflicting styles */
+        pointer-events: all; display: block !important;
+    }
+    .nav-item-dropdown:hover .dropdown-panel {
+        opacity: 1; visibility: visible;
+        transform: translateY(0) scale(1);
+    }
+
+    /* === DROPDOWN HEADER === */
+    .dp-header {
+        display: flex; align-items: center; gap: 0.75rem;
+        padding: 0.8rem 0.9rem 0.7rem;
+    }
+    .dp-header-avatar { flex-shrink: 0; }
+    .dp-avatar-img {
+        width: 40px; height: 40px; border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(0,151,157,0.45); display: block;
+    }
+    .dp-avatar-initials {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: linear-gradient(135deg, #00979d, #7c3aed);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1rem; font-weight: 800; color: white;
+        border: 2px solid rgba(0,151,157,0.45);
+    }
+    .dp-header-info {
+        display: flex; flex-direction: column; gap: 0.05rem;
+        overflow: hidden; min-width: 0;
+    }
+    .dp-username {
+        font-size: 0.9rem; font-weight: 700; color: #f1f5f9;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        line-height: 1.3;
+    }
+    .dp-role {
+        font-size: 0.7rem; font-weight: 500;
+        color: rgba(148,163,184,0.8);
+        text-transform: capitalize; letter-spacing: 0.03em;
+    }
+
+    /* === STATS ROW === */
+    .dp-stats-row {
+        display: flex; align-items: stretch;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 10px;
+        margin: 0 0.4rem 0.4rem; overflow: hidden;
+    }
+    .dp-stat {
+        flex: 1; display: flex; align-items: center;
+        gap: 0.45rem; padding: 0.55rem 0.75rem;
+    }
+    .dp-stat-icon { font-size: 1rem; flex-shrink: 0; line-height: 1; }
+    .dp-stat div { display: flex; flex-direction: column; }
+    .dp-stat-value {
+        font-size: 0.9rem; font-weight: 800;
+        color: #f1f5f9; line-height: 1.2;
+    }
+    .dp-stat-label {
+        font-size: 0.6rem; color: rgba(148,163,184,0.7);
+        font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .dp-stat-divider {
+        width: 1px; background: rgba(255,255,255,0.08);
+        align-self: stretch; flex-shrink: 0;
+    }
+
+    /* === DIVIDER === */
+    .dp-divider { height: 1px; background: rgba(255,255,255,0.07); margin: 0.2rem 0; }
+
+    /* === MENU ITEMS === */
+    .dp-item {
+        display: flex !important; align-items: center; gap: 0.65rem;
+        padding: 0.6rem 0.8rem; border-radius: 10px;
+        color: #cbd5e1 !important; text-decoration: none;
+        font-size: 0.875rem; font-weight: 500;
+        transition: background 0.15s, color 0.15s;
+        cursor: pointer; width: 100%; box-sizing: border-box;
+    }
+    .dp-item:hover {
+        background: rgba(255,255,255,0.07) !important;
+        color: #f8fafc !important;
+    }
+    .dp-item-icon {
+        display: flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; flex-shrink: 0;
+        background: rgba(255,255,255,0.06); border-radius: 7px;
+        color: rgba(148,163,184,0.8);
+        transition: background 0.15s, color 0.15s;
+    }
+    .dp-item:hover .dp-item-icon {
+        background: rgba(0,151,157,0.22); color: #2dd4bf;
+    }
+    .dp-item-danger { color: rgba(252,165,165,0.8) !important; }
+    .dp-item-danger:hover {
+        background: rgba(239,68,68,0.1) !important;
+        color: #fca5a5 !important;
+    }
+    .dp-item-danger .dp-item-icon { color: rgba(252,165,165,0.6); }
+    .dp-item-danger:hover .dp-item-icon {
+        background: rgba(239,68,68,0.18); color: #fca5a5;
+    }
+
+    /* === HIDE OLD ELEMENTS === */
+    .nav-profile-link { display: none !important; }
+    .dropdown-menu    { display: none !important; }
+
+    /* === STREAK PILL (NAVBAR) === */
+    .streak-pill {
+        display: inline-flex; align-items: center; gap: 0.35rem;
+        background: linear-gradient(135deg, rgba(251,146,60,0.15), rgba(239,68,68,0.08));
+        border: 1px solid rgba(251,146,60,0.3);
+        border-radius: 999px; padding: 0.3rem 0.75rem;
+        cursor: default; user-select: none;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .streak-pill:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 12px rgba(251,146,60,0.3);
+    }
+    .streak-flame {
+        font-size: 1rem; line-height: 1;
+        animation: flamePulse 1.8s ease-in-out infinite;
+        display: inline-block;
+    }
+    .streak-count {
+        font-size: 0.9rem; font-weight: 800;
+        color: #fb923c; letter-spacing: 0.02em;
+    }
+    @keyframes flamePulse {
+        0%, 100% { transform: scale(1) rotate(-2deg); filter: drop-shadow(0 0 2px rgba(251,146,60,0.4)); }
+        50%       { transform: scale(1.15) rotate(2deg); filter: drop-shadow(0 0 6px rgba(251,146,60,0.7)); }
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+    }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <a th:href="@{/}" class="logo" style="text-decoration:none;">⚡ DUINOPHILE</a>
+        <ul class="nav-links">
+            <li th:if="${currentUser != null}"><a th:href="@{/courses/list}">Courses</a></li>
+            <li th:if="${currentUser != null and currentUser.role == 'USER'}"><a th:href="@{/courses/my}">My Courses</a></li>
+            <!-- Standard Feed (User Only) -->
+            <li th:if="${currentUser != null and currentUser.role == 'USER'}"><a th:href="@{/posts/feed}">Feed</a></li>
+            
+
+            <li th:if="${currentUser != null and currentUser.role == 'USER'}">
+                <a th:href="@{/reports/my-reports}">My Reports</a>
+            </li>
+
+            <!-- Admin/Staff Community Management -->
+            <li th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}">
+                <a th:href="@{/posts/manage}">Manage Feed</a>
+            </li>
+            <li th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}">
+                <a th:href="@{/feedback/manage}">Manage Reviews</a>
+            </li>
+            <li th:if="${currentUser != null and (currentUser.role == 'ADMIN' or currentUser.role == 'STAFF')}">
+                <a th:href="@{/reports/manage}">Manage Reports</a>
+            </li>
+
+            <!-- Admin-only Dashboard Link -->
+            <li th:if="${currentUser != null and currentUser.role == 'ADMIN'}">
+                <a th:href="@{/admin/dashboard}" class="btn btn-sm">
+                    ⚙️ Admin
+                </a>
+            </li>
+
+            <!-- Logged-out items -->
+            <li th:if="${currentUser == null}"><a th:href="@{/users/login}">Log in</a></li>
+            <li th:if="${currentUser == null}"><a th:href="@{/users/register}" class="btn btn-sm" style="color: white;">Sign up</a></li>
+            <!-- Streak Indicator (logged-in users) -->
+            <li th:if="${currentUser != null and (currentUser.role == 'USER' or currentUser.role == 'STAFF' or currentUser.role == 'ADMIN')}" style="list-style:none;">
+                <div class="streak-pill" title="Your current daily streak">
+                    <span class="streak-flame" aria-hidden="true">🔥</span>
+                    <span class="streak-count" th:text="${currentUser.streakCount}">0</span>
+                </div>
+            </li>
+
+            <!-- User Profile Dropdown -->
+            <li th:if="${currentUser != null}" class="nav-item-dropdown" id="profile-dropdown-li">
+                <!-- Trigger button -->
+                <button type="button" class="nav-profile-trigger" aria-haspopup="true" aria-expanded="false" id="profile-dropdown-btn">
+                    <!-- Avatar -->
+                    <div class="trigger-avatar">
+                        <img th:if="${currentUser.avatarUrl != null and !#strings.isEmpty(currentUser.avatarUrl)}"
+                             th:src="${currentUser.avatarUrl}" class="trigger-avatar-img" alt="Profile"/>
+                        <div th:if="${currentUser.avatarUrl == null or #strings.isEmpty(currentUser.avatarUrl)}"
+                             class="trigger-avatar-initials">
+                            <span th:text="${#strings.substring(currentUser.username,0,1).toUpperCase()}">U</span>
+                        </div>
+                        <!-- Online dot -->
+                        <span class="trigger-avatar-dot"></span>
+                    </div>
+                    <!-- Label -->
+                    <span class="trigger-label" th:text="${currentUser.username}">User</span>
+                    <!-- Chevron -->
+                    <svg class="trigger-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                         stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+
+                <!-- Dropdown Panel -->
+                <div class="dropdown-panel glass-premium" role="menu" aria-labelledby="profile-dropdown-btn">
+
+                    <!-- Header with avatar -->
+                    <div class="dp-header">
+                        <div class="dp-header-avatar">
+                            <img th:if="${currentUser.avatarUrl != null and !#strings.isEmpty(currentUser.avatarUrl)}"
+                                 th:src="${currentUser.avatarUrl}" class="dp-avatar-img" alt="Profile"/>
+                            <div th:if="${currentUser.avatarUrl == null or #strings.isEmpty(currentUser.avatarUrl)}"
+                                 class="dp-avatar-initials">
+                                <span th:text="${#strings.substring(currentUser.username,0,1).toUpperCase()}">U</span>
+                            </div>
+                        </div>
+                        <div class="dp-header-info">
+                            <span class="dp-username" th:text="${currentUser.username}">username</span>
+                            <span class="dp-role" th:text="${#strings.toLowerCase(currentUser.role)}">user</span>
+                        </div>
+                    </div>
+
+                    <!-- Stats row: Points + Streak -->
+                    <div class="dp-stats-row">
+                        <div class="dp-stat">
+                            <span class="dp-stat-icon">&#11088;</span>
+                            <div>
+                                <span class="dp-stat-value" th:text="${currentUser.points}">0</span>
+                                <span class="dp-stat-label">Points</span>
+                            </div>
+                        </div>
+                        <div class="dp-stat-divider"></div>
+                        <div class="dp-stat">
+                            <span class="dp-stat-icon streak-flame">&#128293;</span>
+                            <div>
+                                <span class="dp-stat-value" th:text="${currentUser.streakCount}">0</span>
+                                <span class="dp-stat-label">Day Streak</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dp-divider"></div>
+
+                    <!-- Nav items -->
+                    <a th:href="@{/users/profile/{id}(id=${currentUser.id})}" class="dp-item" role="menuitem">
+                        <span class="dp-item-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        </span>
+                        <span>Profile Settings</span>
+                    </a>
+
+                    <a th:href="@{/courses/my}" class="dp-item" role="menuitem" th:if="${currentUser.role == 'USER'}">
+                        <span class="dp-item-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                        </span>
+                        <span>My Courses</span>
+                    </a>
+
+                    <div class="dp-divider"></div>
+
+                    <a th:href="@{/users/logout}" class="dp-item dp-item-danger" role="menuitem">
+                        <span class="dp-item-icon">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        </span>
+                        <span>Sign out</span>
+                    </a>
+
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 'View as Student' masquerade banner -->
+    <div th:if="${viewAsStudent}" style="background: linear-gradient(90deg, #d97706, #b45309); color: white; padding: 0.6rem 1.5rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.9rem; font-weight: 700; z-index: 999; border-bottom: 2px solid #92400e;">
+        <span>🎓 You are viewing as a Student. Admin features are hidden.</span>
+        <a th:href="@{/admin/restore-admin}" style="color: white; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.4); border-radius: 8px; padding: 0.3rem 0.9rem; text-decoration: none; font-weight: 700; transition: background 0.2s;"
+           onmouseover="this.style.background='rgba(0,0,0,0.45)'" onmouseout="this.style.background='rgba(0,0,0,0.25)'">
+            ✕ Exit Student View
+        </a>
+    </div>
+
+    <div class="container">
+        <main th:insert="~{__${view}__ :: main}"></main>
+    </div>
+
+    <!-- Chatbot Widget -->
+    <div id="chatbot-widget">
+        <button id="chatbot-toggle" class="btn chatbot-btn-glow" title="Ask DuinoBot AI">
+            <span style="font-size: 1.8rem;">🤖</span>
+        </button>
+        <div id="chatbot-window" class="glass-premium" style="display:none;">
+            <div class="chat-header">
+                <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <span style="font-size:1.5rem; filter: drop-shadow(0 2px 4px rgba(0,210,255,0.4));">🤖</span>
+                    <strong style="color:var(--primary); font-size:1.1rem; letter-spacing: 0.02em;">DuinoBot AI</strong>
+                </div>
+                <div style="display:flex; gap: 0.5rem; align-items:center;">
+                    <button id="chatbot-maximize" class="btn btn-sm" title="Toggle Sidebar Mode" style="background:transparent; border:none; color:var(--text-muted); font-size:1.2rem; padding:0 0.3rem; cursor:pointer; transition:0.2s;">◨</button>
+                    <button id="chatbot-close" class="btn btn-sm" title="Close Chat" style="background:transparent; border:none; color:var(--text-muted); font-size:1.4rem; padding:0 0.3rem; line-height:1; cursor:pointer; transition:0.2s;">×</button>
+                </div>
+            </div>
+            <div id="chat-messages">
+                <div class="chat-bot-msg intro-msg" style="padding: 0; background: transparent; border: none; box-shadow: none; max-width: 100%;">
+
+                    <!-- Avatar + Status -->
+                    <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.1rem;">
+                        <div style="width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; box-shadow:0 4px 16px rgba(0,210,255,0.35);">🤖</div>
+                        <div>
+                            <div style="font-weight:800; font-size:1rem; color:var(--text-main); letter-spacing:-0.01em;">DuinoBot AI</div>
+                            <div style="font-size:0.72rem; color:var(--green); font-weight:600; display:flex; align-items:center; gap:0.35rem; margin-top:2px;">
+                                <span style="width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block; animation:pulse 2s infinite;"></span>
+                                Online &amp; Ready
+                            </div>
+                        </div>
+                        <div style="margin-left:auto; background:rgba(0,151,157,0.12); border:1px solid rgba(0,196,204,0.25); border-radius:20px; padding:0.25rem 0.7rem; font-size:0.7rem; font-weight:700; color:var(--primary);">v2.0</div>
+                    </div>
+
+                    <!-- Greeting bubble -->
+                    <div style="background:linear-gradient(135deg,rgba(0,151,157,0.1),rgba(0,196,204,0.05)); border:1px solid rgba(0,196,204,0.2); border-radius:16px; border-top-left-radius:4px; padding:1rem 1.2rem; margin-bottom:1.2rem;">
+                        <p style="margin:0 0 0.5rem; font-size:0.9rem; color:var(--text-sub); line-height:1.65;">
+                            Hi there! 👋 I'm your <strong style="color:var(--primary);">Arduino AI assistant</strong> — built to help you write better code, faster.
+                        </p>
+                        <p style="margin:0; font-size:0.85rem; color:var(--text-muted); line-height:1.5;">
+                            I can <strong style="color:#6ee7b7;">debug your code</strong> and answer any <strong style="color:#c4b5fd;">Arduino questions</strong> you have — from sensors to serial communication.
+                        </p>
+                    </div>
+
+                    <!-- Two capability sections side by side -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:1.1rem;">
+
+                        <!-- Debug section -->
+                        <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); border-radius:12px; padding:0.8rem;">
+                            <div style="font-size:0.7rem; font-weight:800; color:#6ee7b7; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
+                                🔧 Code Debugger
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                                <span style="font-size:0.75rem; color:var(--text-sub);">⚡ Syntax &amp; brackets</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">🔡 Function casing</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">📌 Pin mode errors</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">⏱ Missing delays</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">🔌 I2C / LCD / Servo</span>
+                            </div>
+                        </div>
+
+                        <!-- Q&A section -->
+                        <div style="background:rgba(139,92,246,0.06); border:1px solid rgba(139,92,246,0.2); border-radius:12px; padding:0.8rem;">
+                            <div style="font-size:0.7rem; font-weight:800; color:#c4b5fd; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.6rem; display:flex; align-items:center; gap:0.4rem;">
+                                💬 Arduino Q&amp;A
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                                <span style="font-size:0.75rem; color:var(--text-sub);">🔌 How sensors work</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">📡 Communication (I2C, SPI)</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">⚙️ Libraries &amp; setup</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">💡 Circuit concepts</span>
+                                <span style="font-size:0.75rem; color:var(--text-sub);">🧩 Project guidance</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Suggested questions -->
+                    <div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.55rem;">Try asking</div>
+                    <div style="display:flex; flex-direction:column; gap:0.4rem; margin-bottom:1.1rem;">
+                        <button onclick="document.getElementById('chat-input').value=this.dataset.q; document.getElementById('chat-input').focus();"
+                                data-q="How do I use a DHT11 temperature sensor with Arduino?"
+                                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.5rem 0.8rem; font-size:0.78rem; color:var(--text-sub); text-align:left; cursor:pointer; transition:all 0.2s; font-family:inherit;"
+                                onmouseover="this.style.background='rgba(0,151,157,0.1)'; this.style.borderColor='rgba(0,196,204,0.3)'; this.style.color='var(--text-main)';"
+                                onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.08)'; this.style.color='var(--text-sub)';">
+                            💬 How do I use a DHT11 temperature sensor?
+                        </button>
+                        <button onclick="document.getElementById('chat-input').value=this.dataset.q; document.getElementById('chat-input').focus();"
+                                data-q="What is the difference between delay() and millis() in Arduino?"
+                                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.5rem 0.8rem; font-size:0.78rem; color:var(--text-sub); text-align:left; cursor:pointer; transition:all 0.2s; font-family:inherit;"
+                                onmouseover="this.style.background='rgba(0,151,157,0.1)'; this.style.borderColor='rgba(0,196,204,0.3)'; this.style.color='var(--text-main)';"
+                                onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.08)'; this.style.color='var(--text-sub)';">
+                            💬 What's the difference between delay() and millis()?
+                        </button>
+                        <button onclick="document.getElementById('chat-input').value=this.dataset.q; document.getElementById('chat-input').focus();"
+                                data-q="How do I connect multiple sensors to one Arduino?"
+                                style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:0.5rem 0.8rem; font-size:0.78rem; color:var(--text-sub); text-align:left; cursor:pointer; transition:all 0.2s; font-family:inherit;"
+                                onmouseover="this.style.background='rgba(0,151,157,0.1)'; this.style.borderColor='rgba(0,196,204,0.3)'; this.style.color='var(--text-main)';"
+                                onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.08)'; this.style.color='var(--text-sub)';">
+                            💬 How do I connect multiple sensors to one Arduino?
+                        </button>
+                    </div>
+
+                    <!-- CTA -->
+                    <div style="display:flex; align-items:flex-start; gap:0.65rem; background:rgba(0,210,255,0.05); border:1px solid rgba(0,210,255,0.15); border-radius:10px; padding:0.8rem 1rem;">
+                        <span style="font-size:1rem; margin-top:1px;">💡</span>
+                        <span style="font-size:0.78rem; color:var(--text-muted); line-height:1.5;">
+                            <strong style="color:var(--primary);">Paste your code</strong> to debug it, or <strong style="color:#c4b5fd;">ask any Arduino question</strong> in plain English — I've got you covered.
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="chat-input" placeholder="Ask a question or paste code..." rows="2"></textarea>
+                <button id="chat-send" class="btn chat-send-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Flash Message Handler -->
+    <th:block th:if="${error}">
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops!',
+                    text: /*[[${error}]]*/ '',
+                    confirmButtonColor: '#00979D',
+                    background: '#1E293B',
+                    color: '#F8FAFC'
+                });
+            });
+        </script>
+    </th:block>
+    <th:block th:if="${success}">
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: /*[[${success}]]*/ '',
+                    confirmButtonColor: '#00979D',
+                    background: '#1E293B',
+                    color: '#F8FAFC'
+                });
+            });
+        </script>
+    </th:block>
+
+    <script>
+        // Global delete confirmation
+        function confirmDelete(event, message) {
+            event.preventDefault();
+            const form = event.target.closest('form');
+            if(!form) return;
+            Swal.fire({
+                title: 'Are you sure?',
+                text: message,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#EF4444',
+                cancelButtonColor: '#334155',
+                confirmButtonText: 'Yes, delete it!',
+                background: '#1E293B',
+                color: '#F8FAFC'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+
+        const toggle = document.getElementById('chatbot-toggle');
+        const windowDiv = document.getElementById('chatbot-window');
+        const input = document.getElementById('chat-input');
+        const send = document.getElementById('chat-send');
+        const messages = document.getElementById('chat-messages');
+        const maximizeBtn = document.getElementById('chatbot-maximize');
+        const closeBtn = document.getElementById('chatbot-close');
+
+        toggle.onclick = () => {
+            const isOpen = windowDiv.style.display === 'flex';
+            windowDiv.style.display = isOpen ? 'none' : 'flex';
+            if (!isOpen) {
+                // When opening, ensure it resets animation to play again
+                windowDiv.style.animation = 'none';
+                windowDiv.offsetHeight; /* trigger reflow */
+                windowDiv.style.animation = windowDiv.classList.contains('sidebar-mode') ? 'sidebarSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards' : 'chatOpen 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+                
+                // Hide the main toggle button if we are in sidebar mode
+                if (windowDiv.classList.contains('sidebar-mode')) {
+                    toggle.style.display = 'none';
+                }
+            } else {
+                toggle.style.display = 'flex';
+            }
+        };
+
+        closeBtn.onclick = () => {
+            windowDiv.style.display = 'none';
+            toggle.style.display = 'flex';
+        };
+
+        maximizeBtn.onclick = () => {
+            windowDiv.classList.toggle('sidebar-mode');
+            if (windowDiv.classList.contains('sidebar-mode')) {
+                maximizeBtn.style.color = '#00d2ff';
+                maximizeBtn.style.transform = 'scale(1.1)';
+                toggle.style.display = 'none'; // hide the bubble when in sidebar
+            } else {
+                maximizeBtn.style.color = 'var(--text-muted)';
+                maximizeBtn.style.transform = 'scale(1)';
+                toggle.style.display = 'flex'; // show the bubble
+            }
+        };
+        // Format Arduino code with proper line breaks
+        function formatCode(code) {
+            return code
+                .replace(/;/g, ';\n')
+                .replace(/\{/g, '{\n')
+                .replace(/\}/g, '}\n')
+                .replace(/\n\s*\n/g, '\n')
+                .trim();
+        }
+
+        // LCS-based diff: properly handles insertions/deletions
+        function generateDiff(original, fixed) {
+            const origLines = formatCode(original).split('\n').map(l => l.trim()).filter(l => l);
+            const fixedLines = formatCode(fixed).split('\n').map(l => l.trim()).filter(l => l);
+
+            // Build LCS table
+            const m = origLines.length, n = fixedLines.length;
+            const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
+            for (let i = 1; i <= m; i++)
+                for (let j = 1; j <= n; j++)
+                    dp[i][j] = origLines[i-1] === fixedLines[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
+
+            // Backtrack to get diff
+            const diff = [];
+            let i = m, j = n;
+            while (i > 0 || j > 0) {
+                if (i > 0 && j > 0 && origLines[i-1] === fixedLines[j-1]) {
+                    diff.unshift({type: 'same', text: origLines[i-1]});
+                    i--; j--;
+                } else if (j > 0 && (i === 0 || dp[i][j-1] >= dp[i-1][j])) {
+                    diff.unshift({type: 'add', text: fixedLines[j-1]});
+                    j--;
+                } else {
+                    diff.unshift({type: 'del', text: origLines[i-1]});
+                    i--;
+                }
+            }
+
+            // Render
+            let result = '';
+            for (const d of diff) {
+                const esc = d.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                if (d.type === 'same') {
+                    result += `  ${esc}\n`;
+                } else if (d.type === 'add') {
+                    result += `<span style="background:#166534;color:#4ade80;padding:1px 3px;border-radius:3px;">+ ${esc}</span>\n`;
+                } else {
+                    result += `<span style="background:#991b1b;color:#fca5a5;padding:1px 3px;border-radius:3px;text-decoration:line-through;">- ${esc}</span>\n`;
+                }
+            }
+            return result;
+        }
+
+        async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-user-msg';
+            const formatted = formatCode(text).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            userMsg.innerHTML = `<pre style="margin:0; white-space:pre-wrap; font-family:monospace; font-size:0.82rem;">${formatted}</pre>`;
+            messages.appendChild(userMsg);
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chatbot/ask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const data = await response.json();
+                const botMsg = document.createElement('div');
+                botMsg.className = 'chat-bot-msg';
+                
+                let htmlContent = `<div style="white-space: pre-wrap; margin-bottom: 0.5rem;">💡 ${data.explanation || 'Result:'}</div>`;
+                
+                // Show highlighted changes if we have both original and fixed code
+                if (data.original_code && data.fixed_code && data.original_code.trim() !== data.fixed_code.trim()) {
+                    const diffHtml = generateDiff(data.original_code, data.fixed_code);
+                    htmlContent += `<div style="font-weight: bold; margin-top: 10px;">🔍 Changes Made:</div>
+                    <pre style="background:#1a1a2e; color:#e0e0e0; padding:1rem; border-radius:8px; margin-top:0.25rem; overflow-x:auto; font-family:monospace; font-size:0.82rem; line-height:1.5;">${diffHtml}</pre>`;
+                }
+                
+                if (data.fixed_code) {
+                    const formatted = formatCode(data.fixed_code).replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    htmlContent += `<div style="font-weight: bold; margin-top: 10px;">💻 Corrected Code:</div>
+                    <pre style="background:var(--navy); color:#a78bfa; padding:1rem; border-radius:8px; margin-top:0.25rem; overflow-x:auto;"><code style="font-family: monospace; font-size: 0.85rem;">${formatted}</code></pre>`;
+                }
+                
+                botMsg.innerHTML = htmlContent;
+                messages.appendChild(botMsg);
+            } catch {
+                const errMsg = document.createElement('div');
+                errMsg.className = 'chat-bot-msg';
+                errMsg.textContent = 'Sorry, something went wrong.';
+                messages.appendChild(errMsg);
+            }
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        send.onclick = sendMessage;
+        input.addEventListener('keydown', e => { 
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage(); 
+            }
+        });
+    </script>
+</body>
+</html>

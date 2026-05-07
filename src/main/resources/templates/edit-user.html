@@ -1,0 +1,162 @@
+<div th:fragment="main">
+    <div style="max-width: 580px; margin: 2rem auto;">
+        
+        <!-- Flash Messages -->
+        <div th:if="${success}" role="alert"
+             style="display:flex; align-items:center; gap:0.75rem; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem; animation:fadeInUp 0.4s ease;">
+            <span style="font-size:1.2rem;">✅</span>
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" role="alert"
+             style="display:flex; align-items:center; gap:0.75rem; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem; animation:fadeInUp 0.4s ease;">
+            <span style="font-size:1.2rem;">⚠️</span>
+            <span th:text="${error}"></span>
+        </div>
+
+        <div class="form-card">
+            <h2 style="color:var(--text-main); margin-bottom:0.5rem; font-size:1.75rem; letter-spacing:-0.02em;">Edit Profile</h2>
+            <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:2rem;">Update your personal details and how people see you on Duinophile.</p>
+            
+            <!-- ── Avatar Upload Section ── -->
+            <div style="display:flex; align-items:center; gap:1.5rem; padding-bottom:2rem; border-bottom:1px solid var(--border); margin-bottom:2rem;">
+                <!-- Avatar circle with upload overlay -->
+                <div style="position:relative; cursor:pointer; flex-shrink:0;" onclick="document.getElementById('avatarFileInput').click();"
+                     title="Click to change profile picture">
+                    
+                    <div id="avatarCircle" style="width:90px; height:90px; border-radius:50%; overflow:hidden; border:2px solid var(--border-focus); box-shadow:var(--shadow-sm); position:relative; transition:box-shadow 0.3s ease;"
+                         onmouseover="this.style.boxShadow='0 0 0 4px var(--primary-glow), var(--shadow-md)'"
+                         onmouseout="this.style.boxShadow='var(--shadow-sm)'">
+                        
+                        <!-- Real avatar image -->
+                        <img th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}"
+                             th:src="${user.avatarUrl}" id="avatarPreview" alt="Profile Picture"
+                             style="width:100%; height:100%; object-fit:cover; display:block;"/>
+                        
+                        <!-- Gradient initials fallback -->
+                        <div th:if="${user.avatarUrl == null or #strings.isEmpty(user.avatarUrl)}"
+                             id="avatarFallback"
+                             style="width:100%; height:100%; background:linear-gradient(135deg, var(--primary), var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:900; color:white; letter-spacing:-0.02em; user-select:none;">
+                            <span th:text="${user.fullName != null and !#strings.isEmpty(user.fullName) ? #strings.substring(user.fullName,0,1).toUpperCase() : (user.username != null ? #strings.substring(user.username,0,1).toUpperCase() : '?')}">A</span>
+                        </div>
+                    </div>
+
+                    <!-- Camera overlay on hover -->
+                    <div style="position:absolute; inset:0; border-radius:50%; background:rgba(0,0,0,0.55); display:flex; flex-direction:column; align-items:center; justify-content:center; opacity:0; transition:opacity 0.2s ease; pointer-events:none;"
+                         id="avatarHoverOverlay">
+                        <span style="font-size:1.2rem;">📷</span>
+                        <span style="font-size:0.55rem; font-weight:700; color:white; margin-top:2px; letter-spacing:0.05em;">CHANGE</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 style="margin:0 0 0.25rem 0; font-size:1.05rem; color:var(--text-main);">Profile Picture</h3>
+                    <p style="margin:0 0 0.75rem 0; font-size:0.85rem; color:var(--text-muted); line-height:1.4;">We support PNG, JPG, GIF, or WebP under 5MB.</p>
+                    <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('avatarFileInput').click();">Upload New Image</button>
+                    
+                    <form th:action="@{/users/avatar/{id}(id=${user.id})}" method="post" enctype="multipart/form-data"
+                          id="avatarUploadForm" style="display:none;">
+                        <input type="file" id="avatarFileInput" name="avatarFile"
+                               accept="image/jpeg,image/png,image/gif,image/webp"
+                               onchange="previewAndSubmitAvatar(this)"/>
+                    </form>
+                </div>
+            </div>
+
+            <form th:action="@{/users/update/{id}(id=${user.id})}" th:object="${user}" method="post">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" th:field="*{username}" readonly style="opacity:0.7; cursor:not-allowed;" title="Username cannot be changed">
+                    </div>
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" th:field="*{fullName}" placeholder="e.g. John Doe">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" th:field="*{email}" th:classappend="${#fields.hasErrors('email')} ? 'input-error' : ''" required placeholder="you@example.com">
+                    <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="error-text"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" th:field="*{password}" placeholder="Leave blank to keep current password" th:classappend="${#fields.hasErrors('password')} ? 'input-error' : ''">
+                    <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="error-text"></span>
+                    <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.4rem;">Must be at least 8 characters with a mix of letters, numbers & symbols.</p>
+                </div>
+                
+                <div style="display:flex; gap:1rem; margin-top:2rem;">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <a th:href="@{/users/profile/{id}(id=${user.id})}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="form-card" style="margin-top:2.5rem; border:1px solid rgba(239,68,68,0.3); background: rgba(239,68,68,0.04);">
+            <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem;">
+                <span style="font-size:1.5rem;">⚠️</span>
+                <h3 style="color:#ef4444; margin:0; font-size:1.25rem;">Danger Zone</h3>
+            </div>
+            <p style="color:var(--text-sub); font-size:0.95rem; margin-bottom:1.5rem; line-height:1.5;">Once you delete your account, all your data, posts, courses, and progress will be permanently removed. There is no going back. Please be certain.</p>
+            
+            <form th:action="@{/users/delete-account}" method="post" onsubmit="return confirm('WARNING: Are you absolutely sure you want to PERMANENTLY delete your account? This action cannot be undone.');">
+                <div class="form-group">
+                    <label style="color:#ef4444; font-weight:600;">Confirm Password to Delete Account</label>
+                    <input type="password" name="confirmDeletePassword" required placeholder="Enter your current password to confirm" style="border-color:rgba(239,68,68,0.4); background:rgba(11,17,32,0.6);">
+                </div>
+                <button type="submit" class="btn" style="background:#ef4444; color:white; width:100%; border:none; box-shadow:0 4px 15px rgba(239,68,68,0.25);">Permanently Delete Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Avatar Upload JS ── -->
+    <script>
+    (function() {
+        var wrapper = document.querySelector('[onclick*="avatarFileInput"]');
+        var overlay = document.getElementById('avatarHoverOverlay');
+        if (wrapper && overlay) {
+            wrapper.addEventListener('mouseenter', function() { overlay.style.opacity = '1'; });
+            wrapper.addEventListener('mouseleave', function() { overlay.style.opacity = '0'; });
+        }
+    })();
+
+    function previewAndSubmitAvatar(input) {
+        if (!input.files || !input.files[0]) return;
+        var file = input.files[0];
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File too large - max 5MB.');
+            input.value = '';
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            var fallback = document.getElementById('avatarFallback');
+            if (fallback) fallback.remove();
+            
+            var circle  = document.getElementById('avatarCircle');
+            var preview = document.getElementById('avatarPreview');
+            if (!preview) {
+                preview = document.createElement('img');
+                preview.id = 'avatarPreview';
+                preview.alt = 'Profile Picture';
+                preview.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+                circle.prepend(preview);
+            }
+            preview.src = e.target.result;
+            
+            var ov = document.getElementById('avatarHoverOverlay');
+            if (ov) {
+                ov.style.opacity = '1';
+                ov.innerHTML = '<span style="font-size:1.2rem">⏳</span><span style="font-size:0.55rem;font-weight:700;color:white;margin-top:2px">UPLOADING</span>';
+            }
+            
+            setTimeout(function() { document.getElementById('avatarUploadForm').submit(); }, 300);
+        };
+        reader.readAsDataURL(file);
+    }
+    </script>
+</div>

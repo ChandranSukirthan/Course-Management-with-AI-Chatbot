@@ -1,0 +1,143 @@
+<div th:fragment="main">
+    <!-- Header Bar -->
+    <div class="header-roadmap" style="margin-bottom: 2rem;">
+        <div style="display:flex; align-items:center; gap:1rem;">
+            <a th:href="@{/lessons/view/{id}(id=${lesson.id})}" class="btn-roadmap" style="font-size:0.85rem; padding:0.4rem 0.9rem;">← Back to Lesson</a>
+            <span class="header-title" th:text="${lesson.title} + ' - Quiz'">Lesson Quiz</span>
+        </div>
+    </div>
+
+    <div style="max-width: 800px; margin: 0 auto; padding-bottom: 4rem;">
+        <div th:each="q, i : ${lesson.quiz}" style="margin-bottom:2rem;" class="quiz-question-container">
+            <!-- Question Card -->
+            <div class="panel" style="display:flex; flex-direction:column; align-items:flex-start;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+                    <h3 th:text="'Q' + ${i.count} + '. ' + ${q.question}" style="margin-bottom:0; flex:1; padding-right:1rem;">Question</h3>
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <span class="badge" style="background:#e3f2fd; color:#1565c0; font-weight:700;" th:text="${q.points} + ' Pts'">10 Pts</span>
+                    </div>
+                </div>
+                <!-- Optional Context / Content -->
+                <div th:if="${q.content != null and !q.content.isEmpty()}" 
+                     th:text="${q.content}" 
+                     style="margin-top:0.85rem; padding-top:0.85rem; border-top:1px dashed var(--blue-mid); font-size:0.9rem; color:var(--text-sub); width:100%; line-height:1.5;">
+                   Context
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div style="margin-top:0.75rem;">
+                <button th:each="opt, optIdx : ${q.options}"
+                        class="quiz-option"
+                        th:text="${opt}"
+                        type="button"
+                        th:onclick="'checkAnswer(this, ' + ${optIdx.index} + ', ' + ${q.correctOptionIndex} + ', ' + ${q.points} + ')'">
+                    Option
+                </button>
+            </div>
+        </div>
+
+        <!-- Dynamic Points Screen -->
+        <div id="points-screen" class="points-screen" style="display:none; text-align:center; padding:3rem; border-radius:20px; background:var(--surface); border:2px dashed #28a745; margin-top:2rem;">
+            <div style="font-size:4rem; margin-bottom:0.5rem;" id="points-emoji">🎉</div>
+            <div style="font-size:3.5rem; font-weight:900; color:#28a745; line-height:1;" id="final-points-val">+0</div>
+            <div style="font-size:1.1rem; color:var(--text-muted); font-weight:700; margin-bottom:1.5rem;">Points Earned</div>
+            <form id="claim-form" th:action="@{/lessons/submit-quiz/{id}(id=${lesson.id})}" method="post">
+                <input type="hidden" name="earnedPoints" id="earnedPointsInput" value="0"/>
+                <button type="submit" class="btn btn-green btn-lg">Claim Points & Return to Course</button>
+            </form>
+            <button id="retry-btn" type="button" class="btn btn-lg" style="display:none; margin: 0 auto;" onclick="retryQuiz()">↺ Try Again</button>
+        </div>
+    </div>
+
+    <style>
+        .header-roadmap {
+            background: var(--surface-hover); border: 1px solid var(--border); border-radius: 14px; padding: 0.8rem 1.5rem;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;
+        }
+        .header-title { color: var(--text-main); font-weight: 800; font-size: 1.4rem; }
+        .btn-roadmap {
+            background: var(--primary); color: white; border: none;
+            padding: 0.5rem 1.2rem; border-radius: 10px; font-weight: 700;
+            text-decoration: none; transition: 0.2s; cursor: pointer; font-size: 0.9rem;
+        }
+        .btn-roadmap:hover { background: var(--secondary); transform: translateY(-2px); }
+    </style>
+
+    <script>
+        let answeredCount = 0;
+        let totalEarned = 0;
+        const totalQuestions = document.querySelectorAll('.quiz-question-container').length;
+
+        function checkAnswer(btn, selectedIdx, correctIdx, points) {
+            const group = btn.parentElement;
+            const allOpts = group.querySelectorAll('.quiz-option');
+            allOpts.forEach(opt => { opt.disabled = true; opt.style.cursor = 'default'; });
+
+            if (selectedIdx === correctIdx) {
+                btn.classList.add('correct');
+                btn.style.background = '#2e7d32';
+                btn.style.color = 'white';
+                totalEarned += parseInt(points);
+            } else {
+                btn.classList.add('wrong');
+                btn.style.background = '#d32f2f';
+                btn.style.color = 'white';
+                allOpts[correctIdx]?.classList.add('correct');
+                if (allOpts[correctIdx]) {
+                    allOpts[correctIdx].style.background = '#2e7d32';
+                    allOpts[correctIdx].style.color = 'white';
+                }
+            }
+
+            answeredCount++;
+            if (answeredCount >= totalQuestions) {
+                setTimeout(() => {
+                    document.getElementById('final-points-val').innerText = '+' + totalEarned;
+                    document.getElementById('earnedPointsInput').value = totalEarned;
+                    
+                    if(totalEarned === 0) {
+                        document.getElementById('points-emoji').innerText = '💡';
+                        document.getElementById('final-points-val').style.color = '#5c5c5c';
+                        document.getElementById('points-screen').style.borderColor = '#dc3545';
+                        document.getElementById('claim-form').style.display = 'none';
+                        document.getElementById('retry-btn').style.display = 'inline-block';
+                    } else {
+                        document.getElementById('points-emoji').innerText = '🎉';
+                        document.getElementById('final-points-val').style.color = '#28a745';
+                        document.getElementById('points-screen').style.borderColor = '#28a745';
+                        document.getElementById('claim-form').style.display = 'block';
+                        document.getElementById('retry-btn').style.display = 'none';
+                    }
+                    
+                    document.getElementById('points-screen').style.display = 'block';
+                    document.getElementById('points-screen').scrollIntoView({ behavior: 'smooth' });
+                }, 800);
+            }
+        }
+
+        function retryQuiz() {
+            // Reset counters
+            answeredCount = 0;
+            totalEarned = 0;
+            
+            // Hide points screen
+            document.getElementById('points-screen').style.display = 'none';
+            
+            // Reset all option buttons
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.disabled = false;
+                opt.style.cursor = 'pointer';
+                opt.classList.remove('correct', 'wrong');
+                opt.style.background = '';
+                opt.style.color = '';
+            });
+            
+            // Scroll back to the first question
+            const firstQuestion = document.querySelector('.quiz-question-container');
+            if(firstQuestion) {
+                firstQuestion.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+</div>

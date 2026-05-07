@@ -1,0 +1,195 @@
+<div th:fragment="main">
+    <div style="max-width: 720px; margin: 2rem auto;">
+        <div class="form-card">
+            <div style="margin-bottom:1.2rem;">
+                <a th:href="@{/lessons/view/{id}(id=${lesson.id})}" class="btn btn-secondary" style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.9rem;">← Back</a>
+            </div>
+            <h2 style="margin-bottom:1.5rem;">Edit Lesson</h2>
+            <form th:action="@{/lessons/update/{id}(id=${lesson.id})}" th:object="${lesson}" method="post" enctype="multipart/form-data" novalidate>
+                <input type="hidden" th:field="*{courseId}">
+
+                <div class="form-group">
+                    <label>Lesson Name</label>
+                    <input type="text" th:field="*{title}" th:classappend="${#fields.hasErrors('title')} ? 'input-error' : ''" required>
+                    <span th:if="${#fields.hasErrors('title')}" th:errors="*{title}" class="error-text"></span>
+                </div>
+                <div class="form-group">
+                    <label>Lesson Content</label>
+                    <textarea th:field="*{content}" rows="8" th:classappend="${#fields.hasErrors('content')} ? 'input-error' : ''" required></textarea>
+                    <span th:if="${#fields.hasErrors('content')}" th:errors="*{content}" class="error-text"></span>
+                </div>
+
+                <!-- PDF Material Upload -->
+                <div class="form-group" style="background:var(--surface-hover); padding:1rem; border-radius:10px; border:1px solid var(--border);">
+                    <label style="font-weight:700;">📂 Lesson Materials (PDF)</label>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-top:-0.4rem; margin-bottom:0.8rem;">Update or upload a study guide for this lesson.</p>
+                    
+                    <!-- Current File Display -->
+                    <div th:if="${lesson.materialUrl}" style="background:var(--surface-primary); padding:0.6rem; border-radius:8px; margin-bottom:0.8rem; display:flex; align-items:center; gap:0.6rem; border:1px solid var(--border);">
+                        <span style="font-size:1.2rem;">📄</span>
+                        <div style="flex:1;">
+                            <div style="font-size:0.85rem; font-weight:600;" th:text="${lesson.materialName}">lesson_material.pdf</div>
+                            <div style="font-size:0.7rem; color:var(--accent);">Currently uploaded</div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-red" style="padding:0.35rem 0.7rem; font-size:0.78rem;"
+                                onclick="if(confirm('Remove the PDF material from this lesson?')) { document.getElementById('delete-mat-form').submit(); }">
+                            🗑️ Delete PDF
+                        </button>
+                    </div>
+
+
+                    <input type="file" name="materialFile" accept="application/pdf" style="padding:0.5rem; background:var(--surface-primary); border:1px solid var(--border); width:100%;">
+                    <span th:if="${#fields.hasErrors('materialName')}" th:errors="*{materialName}" class="error-text"></span>
+                </div>
+
+                <!-- Existing Quiz Questions -->
+                <div style="border-top:2px solid var(--border); margin-top:1.5rem; padding-top:1.5rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h3 style="margin-bottom:0;">Quiz Questions</h3>
+                        <button type="button" onclick="addQuestion()" class="btn btn-sm btn-secondary">+ Add Question</button>
+                    </div>
+
+                    <!-- Improved Validation Error Display -->
+                    <div th:if="${#fields.hasErrors('quiz*')}" style="margin-bottom:1rem; font-size:0.85rem; padding:0.8rem; background:var(--surface-hover); border:1px solid var(--border); color:var(--error); border-radius:6px;">
+                        <strong>Please fix the following errors in your quiz creation:</strong>
+                        <ul style="margin-top:0.4rem; padding-left:1.2rem; margin-bottom:0;">
+                            <th:block th:each="q, qs : ${lesson.quiz}">
+                                <li th:if="${#fields.hasErrors('quiz[__${qs.index}__].question')}" th:each="err : ${#fields.errors('quiz[__${qs.index}__].question')}" th:text="${err}"></li>
+                            </th:block>
+                            <th:block th:each="q, qs : ${lesson.quiz}">
+                                <li th:if="${#fields.hasErrors('quiz[__${qs.index}__].content')}" th:each="err : ${#fields.errors('quiz[__${qs.index}__].content')}" th:text="${err}"></li>
+                            </th:block>
+                            
+                            <li th:each="err : ${#fields.errors('quiz')}" th:text="${err}"></li>
+                            
+                            <th:block th:each="q, qs : ${lesson.quiz}">
+                                <li th:if="${#fields.hasErrors('quiz[__${qs.index}__].points')}" th:each="err : ${#fields.errors('quiz[__${qs.index}__].points')}" th:text="${err}"></li>
+                            </th:block>
+                        </ul>
+                    </div>
+
+                    <div id="quiz-container">
+                        <!-- Render existing questions bound to the model -->
+                        <div th:each="q, qs : ${lesson.quiz}" class="quiz-block">
+                            <div class="quiz-block-header" style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                                <span style="font-weight:700; font-size:0.88rem;">Question <span class="q-num" th:text="${qs.count}">1</span></span>
+                                <button type="button" class="remove-btn" onclick="removeQuestion(this)" title="Remove">&#215;</button>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label>Question Text</label>
+                                <input type="text" th:name="'quiz[' + ${qs.index} + '].question'" th:value="${q.question}" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0.75rem;">
+                                <label>Content / Context <small style="color:var(--text-muted); font-weight:400;">(Optional)</small></label>
+                                <textarea th:name="'quiz[' + ${qs.index} + '].content'" th:text="${q.content}" rows="2" placeholder="Provide context or explanation for this question"></textarea>
+                            </div>
+                            <div style="margin-bottom:0.4rem;">
+                                <label style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Options (select correct answer)</label>
+                            </div>
+                            <div class="opt-row">
+                                <input type="radio" th:name="'quiz[' + ${qs.index} + '].correctOptionIndex'" value="0" th:checked="${q.correctOptionIndex == 0}">
+                                <input type="text" th:name="'quiz[' + ${qs.index} + '].options[0]'" th:value="${#lists.size(q.options) > 0 ? q.options[0] : ''}" placeholder="Option 1" style="flex:1;">
+                            </div>
+                            <div class="opt-row">
+                                <input type="radio" th:name="'quiz[' + ${qs.index} + '].correctOptionIndex'" value="1" th:checked="${q.correctOptionIndex == 1}">
+                                <input type="text" th:name="'quiz[' + ${qs.index} + '].options[1]'" th:value="${#lists.size(q.options) > 1 ? q.options[1] : ''}" placeholder="Option 2" style="flex:1;">
+                            </div>
+                            <div class="opt-row">
+                                <input type="radio" th:name="'quiz[' + ${qs.index} + '].correctOptionIndex'" value="2" th:checked="${q.correctOptionIndex == 2}">
+                                <input type="text" th:name="'quiz[' + ${qs.index} + '].options[2]'" th:value="${#lists.size(q.options) > 2 ? q.options[2] : ''}" placeholder="Option 3" style="flex:1;">
+                            </div>
+                            <div class="opt-row">
+                                <input type="radio" th:name="'quiz[' + ${qs.index} + '].correctOptionIndex'" value="3" th:checked="${q.correctOptionIndex == 3}">
+                                <input type="text" th:name="'quiz[' + ${qs.index} + '].options[3]'" th:value="${#lists.size(q.options) > 3 ? q.options[3] : ''}" placeholder="Option 4" style="flex:1;">
+                            </div>
+                            <div class="points-row">
+                                <label>🏆 Points for correct answer:</label>
+                                <input type="number" th:name="'quiz[' + ${qs.index} + '].points'" th:value="${q.points > 0 ? q.points : 10}" min="-1000" max="1000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:0.75rem; margin-top:1.5rem;">
+                    <button type="submit" class="btn">Save Changes</button>
+                    <a th:href="@{/lessons/view/{id}(id=${lesson.id})}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Hidden form for deleting material without nesting -->
+    <form id="delete-mat-form" th:action="@{/lessons/delete-material/{id}(id=${lesson.id})}" method="post" style="display:none;"></form>
+
+    <style>
+        .quiz-block {
+            background: var(--surface-hover);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.2rem;
+            margin-bottom: 1rem;
+        }
+        .quiz-block-header { margin-bottom: 0.75rem; }
+        .quiz-block .remove-btn {
+            background: var(--surface-primary); border: 1px solid var(--border); color: var(--error);
+            border-radius: 50%; width: 26px; height: 26px; font-size: 1rem;
+            cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center;
+        }
+        .opt-row { display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem; }
+        .opt-row input[type="radio"] { width: auto; margin: 0; accent-color: var(--accent); }
+        .points-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+        .points-row label { font-size: 0.82rem; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+        .points-row input[type="number"] { width: 80px; }
+    </style>
+
+    <script>
+        function addQuestion() {
+            const container = document.getElementById('quiz-container');
+            const i = document.querySelectorAll('.quiz-block').length;
+            const block = document.createElement('div');
+            block.className = 'quiz-block';
+            block.innerHTML = `
+                <div class="quiz-block-header" style="display:flex; justify-content:space-between; margin-bottom:0.75rem;">
+                    <span style="font-weight:700; font-size:0.88rem;">Question <span class="q-num">${i + 1}</span></span>
+                    <button type="button" class="remove-btn" onclick="removeQuestion(this)" title="Remove">&#215;</button>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Question Text</label>
+                    <input type="text" name="quiz[${i}].question" placeholder="Enter question..." required>
+                </div>
+                <div class="form-group" style="margin-bottom:0.75rem;">
+                    <label>Content / Context <small style="color:var(--text-muted); font-weight:400;">(Optional)</small></label>
+                    <textarea name="quiz[${i}].content" placeholder="Provide context or explanation for this question" rows="2"></textarea>
+                </div>
+                <div style="margin-bottom:0.4rem;">
+                    <label style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">Options (select correct answer)</label>
+                </div>
+                <div class="opt-row"><input type="radio" name="quiz[${i}].correctOptionIndex" value="0" checked><input type="text" name="quiz[${i}].options[0]" placeholder="Option 1" style="flex:1;"></div>
+                <div class="opt-row"><input type="radio" name="quiz[${i}].correctOptionIndex" value="1"><input type="text" name="quiz[${i}].options[1]" placeholder="Option 2" style="flex:1;"></div>
+                <div class="opt-row"><input type="radio" name="quiz[${i}].correctOptionIndex" value="2"><input type="text" name="quiz[${i}].options[2]" placeholder="Option 3" style="flex:1;"></div>
+                <div class="opt-row"><input type="radio" name="quiz[${i}].correctOptionIndex" value="3"><input type="text" name="quiz[${i}].options[3]" placeholder="Option 4" style="flex:1;"></div>
+                <div class="points-row">
+                    <label>🏆 Points for correct answer:</label>
+                    <input type="number" name="quiz[${i}].points" value="10" min="-1000" max="1000">
+                </div>
+            `;
+            container.appendChild(block);
+        }
+
+        function removeQuestion(btn) {
+            btn.closest('.quiz-block').remove();
+            reindexQuestions();
+        }
+
+        function reindexQuestions() {
+            const blocks = document.querySelectorAll('.quiz-block');
+            blocks.forEach(function(block, idx) {
+                const qNumStr = block.querySelector('.q-num');
+                if (qNumStr) qNumStr.textContent = (idx + 1);
+                block.querySelectorAll('input[name], textarea[name]').forEach(function(input) {
+                    input.name = input.name.replace(/quiz\[\d+\]/, 'quiz[' + idx + ']');
+                });
+            });
+        }
+    </script>
+</div>

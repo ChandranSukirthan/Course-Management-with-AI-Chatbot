@@ -1,0 +1,47 @@
+<div th:fragment="main">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <h1 style="margin:0;">Manage Reviews</h1>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${feedbacks == null or #lists.isEmpty(feedbacks)}" style="color:var(--text-muted); font-size:1.1rem; padding: 2rem; text-align: center; background: var(--surface-hover); border-radius: 12px; border: 1px solid var(--border);">
+        No reviews to manage currently.
+    </div>
+
+    <!-- Feedbacks Table -->
+    <div th:if="${feedbacks != null and !#lists.isEmpty(feedbacks)}" style="background: var(--surface-hover); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow-sm); border: 1px solid var(--border);">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead style="border-bottom: 2px solid var(--border);">
+                <tr>
+                    <th style="padding: 1rem;">Course ID</th>
+                    <th style="padding: 1rem;">Author</th>
+                    <th style="padding: 1rem;">Rating</th>
+                    <th style="padding: 1rem;">Content</th>
+                    <th style="padding: 1rem;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="fb : ${feedbacks}" style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                    <td style="padding: 1rem; font-size: 0.85rem; color: var(--text-main); font-weight: 600;" th:text="${courseNames[fb.courseId] != null ? courseNames[fb.courseId] : fb.courseId}">course_id</td>
+                    <td style="padding: 1rem; font-size: 0.9rem; font-weight: 500;" th:text="${fb.username != null ? fb.username : 'Unknown'}">User</td>
+                    <td style="padding: 1rem; font-size: 1.1rem; color: #f39c12;" th:text="${#strings.repeat('★', fb.rating)}">★★★★★</td>
+                    <td style="padding: 1rem; font-size: 0.9rem; color: var(--text-main); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" th:text="${fb.content != null && fb.content != '' ? fb.content : '(No written feedback)'}">Content string</td>
+                    <td style="padding: 1rem;">
+                        <div style="display:flex; gap:0.5rem; align-items:center;">
+                            <!-- Delete Action -->
+                            <form th:action="@{/feedback/delete/{id}(id=${fb.id})}" method="post" onsubmit="confirmDelete(event, 'Permanently delete this review?')" style="margin:0;">
+                                <input type="hidden" name="redirect" value="/feedback/manage" />
+                                <button type="submit" style="background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 0.35rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: 0.2s;">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <style>
+        tbody tr:hover { background: var(--surface); }
+        button:hover { filter: brightness(1.1); }
+    </style>
+</div>

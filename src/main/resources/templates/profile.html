@@ -1,0 +1,208 @@
+<div th:fragment="main">
+    <!-- Premium Banner -->
+    <div class="page-banner profile">
+        <span class="banner-icon">👤</span>
+        <div>
+            <h1>My Profile</h1>
+            <p th:text="'Welcome back, ' + (${user.fullName != null ? user.fullName : user.username}) + '! Keep up the great work.'">Welcome back!</p>
+        </div>
+    </div>
+    <div style="max-width: 680px; margin: 0 auto;">
+
+        <!-- Flash Messages -->
+        <div th:if="${success}" role="alert"
+             style="display:flex; align-items:center; gap:0.75rem; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); color:#6ee7b7; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem; animation:fadeInUp 0.4s ease;">
+            <span style="font-size:1.2rem;">✅</span>
+            <span th:text="${success}"></span>
+        </div>
+        <div th:if="${error}" role="alert"
+             style="display:flex; align-items:center; gap:0.75rem; background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3); color:#fca5a5; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem; animation:fadeInUp 0.4s ease;">
+            <span style="font-size:1.2rem;">⚠️</span>
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="form-card">
+
+            <!-- ── Avatar Section ── -->
+            <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:2rem;">
+
+                <!-- Avatar circle -->
+                <div style="position:relative;">
+                    <div style="width:120px; height:120px; border-radius:50%; overflow:hidden; border:4px solid var(--surface); box-shadow:0 0 0 2px var(--primary), var(--shadow-lg); position:relative;">
+                        <!-- Real avatar image -->
+                        <img th:if="${user.avatarUrl != null and !#strings.isEmpty(user.avatarUrl)}"
+                             th:src="${user.avatarUrl}" alt="Profile Picture"
+                             style="width:100%; height:100%; object-fit:cover; display:block;"/>
+                        <!-- Gradient initials fallback -->
+                        <div th:if="${user.avatarUrl == null or #strings.isEmpty(user.avatarUrl)}"
+                             style="width:100%; height:100%; background:linear-gradient(135deg, var(--primary), var(--secondary)); display:flex; align-items:center; justify-content:center; font-size:3rem; font-weight:900; color:white; letter-spacing:-0.02em; user-select:none;">
+                            <span th:text="${user.fullName != null and !#strings.isEmpty(user.fullName) ? #strings.substring(user.fullName,0,1).toUpperCase() : (user.username != null ? #strings.substring(user.username,0,1).toUpperCase() : '?')}">A</span>
+                        </div>
+                    </div>
+                    <!-- Pulsing online indicator -->
+                    <div style="position:absolute; bottom:8px; right:8px; width:18px; height:18px; background:var(--green); border-radius:50%; border:3px solid var(--surface); animation:pulse 2s infinite;"></div>
+                </div>
+
+                <p style="margin-top:1.2rem; font-size:1.4rem; font-weight:800; color:var(--text-main); letter-spacing:-0.01em;" th:text="${user.fullName != null ? user.fullName : user.username}">Name</p>
+                <p style="font-size:0.95rem; color:var(--text-muted); margin-top:0.2rem; font-weight:500;" th:text="'@' + ${user.username}">@username</p>
+            </div>
+
+            <!-- Profile Details List -->
+            <div style="background:var(--surface-hover); border-radius:var(--radius); padding:0.5rem; margin-bottom:1.5rem; border:1px solid var(--border);">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <span style="font-size:1.2rem; color:var(--text-muted);">📧</span>
+                        <div>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Email Address</p>
+                            <p style="font-size:1rem; font-weight:500; color:var(--text-main); margin:0.2rem 0 0 0;" th:text="${user.email}">user@example.com</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <span style="font-size:1.2rem; color:var(--text-muted);">🛡️</span>
+                        <div>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Account Role</p>
+                            <p style="font-size:1rem; font-weight:500; color:var(--text-main); margin:0.2rem 0 0 0; text-transform:capitalize;" th:text="${#strings.toLowerCase(user.role)}">User</p>
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:1rem;">
+                    <div style="display:flex; align-items:center; gap:1rem;">
+                        <span style="font-size:1.2rem; color:var(--text-muted);">🔒</span>
+                        <div>
+                            <p style="font-size:0.8rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.05em;">Password</p>
+                            <p style="font-size:1rem; font-weight:500; color:var(--text-main); margin:0.2rem 0 0 0;">••••••••</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Points & Stats Grid (non-admin) -->
+            <div th:if="${user.role != 'ADMIN' and user.role != 'STAFF'}" style="margin-bottom:1.5rem;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.85rem;">
+
+                    <!-- Points card -->
+                    <div style="background:linear-gradient(135deg, rgba(0,151,157,0.15), rgba(0,151,157,0.05)); border:1px solid rgba(0,151,157,0.3); border-radius:14px; padding:1.1rem 1.2rem; display:flex; flex-direction:column; gap:0.4rem; transition:transform 0.2s, box-shadow 0.2s;"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(0,151,157,0.25)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <span style="font-size:1.5rem;">⭐</span>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Total Points</p>
+                        <p style="font-size:1.75rem; font-weight:900; color:var(--primary); margin:0; line-height:1;" th:text="${user.points != null ? user.points : 0}">0</p>
+                    </div>
+
+                    <!-- Streak card -->
+                    <div style="background:linear-gradient(135deg, rgba(251,146,60,0.15), rgba(251,146,60,0.05)); border:1px solid rgba(251,146,60,0.3); border-radius:14px; padding:1.1rem 1.2rem; display:flex; flex-direction:column; gap:0.4rem; transition:transform 0.2s, box-shadow 0.2s;"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(251,146,60,0.25)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <span style="font-size:1.5rem;">🔥</span>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Day Streak</p>
+                        <p style="font-size:1.75rem; font-weight:900; color:#fb923c; margin:0; line-height:1;" th:text="${user.streakCount != null ? user.streakCount : 0}">0</p>
+                    </div>
+
+                    <!-- Completed Lessons card -->
+                    <div style="background:linear-gradient(135deg, rgba(139,92,246,0.15), rgba(139,92,246,0.05)); border:1px solid rgba(139,92,246,0.3); border-radius:14px; padding:1.1rem 1.2rem; display:flex; flex-direction:column; gap:0.4rem; transition:transform 0.2s, box-shadow 0.2s;"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(139,92,246,0.25)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <span style="font-size:1.5rem;">🚪</span>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Lessons Done</p>
+                        <p style="font-size:1.75rem; font-weight:900; color:#a78bfa; margin:0; line-height:1;" th:text="${user.completedLessonIds != null ? #lists.size(user.completedLessonIds) : 0}">0</p>
+                    </div>
+
+                    <!-- Streak Freezes card -->
+                    <div style="background:linear-gradient(135deg, rgba(59,130,246,0.15), rgba(59,130,246,0.05)); border:1px solid rgba(59,130,246,0.3); border-radius:14px; padding:1.1rem 1.2rem; display:flex; flex-direction:column; gap:0.4rem; transition:transform 0.2s, box-shadow 0.2s;"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(59,130,246,0.25)';"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <span style="font-size:1.5rem;">🧊</span>
+                        <p style="font-size:0.7rem; color:var(--text-muted); margin:0; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Streak Freezes</p>
+                        <p style="font-size:1.75rem; font-weight:900; color:#60a5fa; margin:0; line-height:1;" th:text="${user.streakFreezes != null ? user.streakFreezes : 4}">4</p>
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; margin-top:0.5rem; flex-wrap:wrap;">
+                <a th:href="@{/users/edit/{id}(id=${user.id})}" class="btn">✏️ Edit Profile</a>
+                <a th:href="@{/courses/my}" class="btn btn-secondary">My Courses</a>
+                <a th:href="@{/posts/feed}" class="btn btn-secondary">Community Feed</a>
+                <a th:href="@{/reports/my-reports}" class="btn btn-secondary">🚩 My Reports</a>
+            </div>
+        </div>
+        <!-- My Posts Section -->
+        <div style="margin-top: 2.5rem; animation: fadeInUp 0.5s ease both;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem;">
+                <h3 style="color:var(--text-main); margin:0; font-size:1.35rem; display:flex; align-items:center; gap:0.6rem; letter-spacing:-0.02em;">
+                    📝 My Posts
+                    <span th:if="${userPosts != null}"
+                          style="background:var(--primary-glow); color:var(--primary); border-radius:999px; font-size:0.85rem; font-weight:700; padding:0.2rem 0.7rem; border:1px solid var(--border-focus); box-shadow: 0 0 10px var(--primary-glow);"
+                          th:text="${#lists.size(userPosts)}">0</span>
+                </h3>
+                <a th:href="@{/posts/create}" style="background:var(--primary); color:white; border:none; border-radius:12px; font-weight:700; display:flex; align-items:center; gap:0.5rem; padding: 0.65rem 1.4rem; text-decoration:none; box-shadow: var(--shadow-sm); transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px var(--primary-glow)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='var(--shadow-sm)';">
+                    <span style="font-size:1.1rem;">✨</span> Share Achievement
+                </a>
+            </div>
+
+            <!-- Empty State -->
+            <div th:if="${userPosts == null or #lists.isEmpty(userPosts)}"
+                 style="text-align:center; padding:3.5rem 2rem; color:var(--text-muted); background:var(--surface); border-radius:var(--radius); border:2px dashed var(--border); transition:var(--transition); cursor:pointer;"
+                 onmouseover="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 15px var(--primary-glow)'" onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                <span style="font-size:3.5rem; display:block; margin-bottom:1rem; opacity:0.8; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));">🌱</span>
+                <p style="font-size:1.1rem; font-weight:500; margin-bottom: 1.5rem;">You haven't posted anything yet.</p>
+                <a th:href="@{/posts/create}" class="btn">Share your first achievement!</a>
+            </div>
+
+            <!-- Posts List -->
+            <div th:if="${userPosts != null and !#lists.isEmpty(userPosts)}" style="display:flex; flex-direction:column; gap:1.5rem;">
+                <div th:each="post : ${userPosts}" class="post-row"
+                     style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.75rem; box-shadow:var(--shadow-sm); transition:transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;"
+                     onmouseover="this.style.borderColor='var(--border-focus)'; this.style.boxShadow='0 8px 25px rgba(0,0,0,0.4)'" onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='var(--shadow-sm)'">
+                    
+                    <!-- Top row -->
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1.25rem;">
+                        <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+                            <span style="font-weight:700; color:var(--primary); font-size:1.05rem; letter-spacing: 0.01em;"
+                                  th:text="${'@' + (post.authorName != null ? post.authorName : 'Scholar')}">@user</span>
+                            <span th:if="${post.achievementType != null and !post.achievementType.isEmpty()}"
+                                  style="background:rgba(0,196,204,0.1); color:var(--secondary); font-size:0.75rem; font-weight:700; padding:0.25rem 0.8rem; border-radius:999px; border:1px solid rgba(0,196,204,0.25); text-transform: uppercase; letter-spacing: 0.05em;"
+                                  th:text="${post.achievementType}">Achievement</span>
+                            <span th:if="${post.status == 'PENDING'}"
+                                  style="background:rgba(245,158,11,0.1); color:var(--orange); font-size:0.75rem; font-weight:700; padding:0.25rem 0.8rem; border-radius:999px; border:1px solid rgba(245,158,11,0.3); text-transform: uppercase; letter-spacing: 0.05em;">⏳ Pending</span>
+                            <span th:if="${post.status == 'APPROVED'}"
+                                  style="background:rgba(16,185,129,0.1); color:var(--green); font-size:0.75rem; font-weight:700; padding:0.25rem 0.8rem; border-radius:999px; border:1px solid rgba(16,185,129,0.3); text-transform: uppercase; letter-spacing: 0.05em;">✅ Approved</span>
+                        </div>
+                        <span style="font-size:0.85rem; color:var(--text-muted); font-weight:500;"
+                              th:text="${post.createdAt != null ? #temporals.format(post.createdAt, 'MMM d, yyyy') : ''}">Date</span>
+                    </div>
+
+                    <p style="margin:0 0 1.25rem 0; color:var(--text-main); line-height:1.7; font-size:1rem;"
+                       th:text="${post.content}">Post content</p>
+
+                    <div th:if="${post.imageUrl != null}" style="margin-bottom:1.25rem; border-radius:var(--radius-sm); overflow:hidden; border: 1px solid var(--border);">
+                        <img th:src="${post.imageUrl}" alt="Post Image"
+                             style="width:100%; max-height:350px; object-fit:cover; display:block; transition:transform 0.5s ease;"
+                             onmouseover="this.style.transform='scale(1.03)'" onmouseout="this.style.transform='scale(1)'"/>
+                    </div>
+
+                    <div style="display:flex; gap:1.5rem; margin-bottom:1.25rem; font-size:0.95rem; color:var(--text-sub); border-bottom:1px solid var(--border); padding-bottom:1.25rem; font-weight: 500;">
+                        <span style="display:flex; align-items:center; gap:0.4rem; transition: color 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-sub)'">👍 <strong th:text="${post.reactions != null and post.reactions.get('like') != null ? post.reactions.get('like').size() : 0}">0</strong></span>
+                        <span style="display:flex; align-items:center; gap:0.4rem; transition: color 0.2s;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text-sub)'">❤️ <strong th:text="${post.reactions != null and post.reactions.get('love') != null ? post.reactions.get('love').size() : 0}">0</strong></span>
+                        <span style="display:flex; align-items:center; gap:0.4rem; transition: color 0.2s;" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--text-sub)'">💡 <strong th:text="${post.reactions != null and post.reactions.get('insight') != null ? post.reactions.get('insight').size() : 0}">0</strong></span>
+                        <span th:if="${post.comments != null}" style="display:flex; align-items:center; gap:0.4rem; margin-left:auto; color: var(--primary);">💬 <strong th:text="${#lists.size(post.comments)}">0</strong> Comments</span>
+                    </div>
+
+                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center;">
+                        <a th:href="@{/posts/view/{id}(id=${post.id})}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">View Post</a>
+                        <a th:href="@{/posts/edit/{id}(id=${post.id})}" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">✏️ Edit</a>
+                        <form th:action="@{/posts/delete/{id}(id=${post.id})}" method="post" style="margin:0; margin-left:auto;"
+                              onsubmit="confirmDelete(event, 'Delete this post permanently?')">
+                            <button type="submit" class="btn btn-red" style="font-size: 0.85rem; padding: 0.5rem 1rem;">🗑 Delete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
