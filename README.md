@@ -17,8 +17,7 @@ Make sure you have the following installed:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/IT24103874/Duinophile.git
-cd duinophile
+git clone https://github.com/ChandranSukirthan/Course-Management-with-AI-Chatbot.git
 ```
 
 ### 2. Download the trained model weight file
